@@ -3,6 +3,7 @@ import mujoco.viewer
 from ompl import base as ob
 from ompl import geometric as og
 import numpy as np
+import time
 
 model_path = "model/franka_emika_panda/pick_place_scene.xml"
 model = mujoco.MjModel.from_xml_path(model_path)
@@ -42,8 +43,8 @@ space.setBounds(bounds)
 start = ob.State(space)
 goal = ob.State(space)
 
-start_vals = np.array([0.0, -0.5, 0.0, -1.5, 0.0, 1.0, 0.5, 0, 0])   # e.g., home config
-goal_vals = np.array([0.5, -0.2, 0.3, -1.0, 0.2, 1.2, -0.3, 0, 0])      # e.g., reach config
+start_vals = [0.0, -0.5, 0.0, -1.5, 0.0, 1.5, 0.7, 0.04, 0.04]
+goal_vals = [0.5, 0.0, 0.0, -1.0, 0.0, 1.2, -0.5, 0.0, 0.0]
 
 for i in range(n_dofs):
     start[i] = start_vals[i]
@@ -76,6 +77,7 @@ else:
 
 
 
+
 with mujoco.viewer.launch_passive(model, data) as viewer:
     for i in range(path.getStateCount()):
         state = path.getState(i)
@@ -83,4 +85,12 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
             data.qpos[j] = state[j]
         mujoco.mj_forward(model, data)
         viewer.sync()
+        time.sleep(0.01)
+
+    # Keep window open
+    while viewer.is_running():
+        viewer.sync()
+        time.sleep(0.1)
+
+
 
