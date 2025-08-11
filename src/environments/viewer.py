@@ -4,13 +4,11 @@ from robot.robot import Robot
 
 class Viewer:
     @staticmethod
-    def start_viewer(robot: Robot, path):
-        with mujoco.viewer.launch_passive(robot.model, robot.data) as viewer:
-            for i in range(path.getStateCount()):
-                state = path.getState(i)
-                for j in range(robot.n_dofs):
-                    robot.data.qpos[j] = state[j]#passes the joint position of the planner to the model
-                mujoco.mj_forward(robot.model, robot.data)
+    def run_trajectory(env, trajectory):
+        with mujoco.viewer.launch_passive(env.robot.model, env.robot.data) as viewer:
+            for i in range(trajectory.getStateCount()):
+                state = trajectory.getState(i)
+                env.apply_action(state)
                 viewer.sync()
                 time.sleep(0.01)
 
