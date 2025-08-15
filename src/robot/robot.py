@@ -11,7 +11,7 @@ class Robot:
         self.data = mujoco.MjData(self.model)
         self.n_dofs = self.model.nv 
         self.n_jnts = self.model.njnt
-        # joint_names = [model.joint(i).name for i in range(model.njnt)]
+        self.joint_names = [self.model.joint(i).name for i in range(self.model.njnt)]
 
     def get_joint_limits(self):
         lower_limits = []
