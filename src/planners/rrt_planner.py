@@ -58,14 +58,18 @@ class RRTPlanner:
 
         pdef = ob.ProblemDefinition(si)
         pdef.setStartAndGoalStates(self.start, self.goal)
-
-        planner = og.RRT(si)
+        # planner = og.RRTConnect(si)  # much faster and often cleaner
+        planner = og.RRTstar(si)
+        planner.setRange(0.2)
         planner.setProblemDefinition(pdef)
         planner.setup()
 
         if planner.solve(5.0):#find solution within 5 seconds
             path = pdef.getSolutionPath()
             path.interpolate()  # smoother
+            #TODO simplifyer
+
+
             print("Found path with", path.getStateCount(), "states")
             return path
         else:
