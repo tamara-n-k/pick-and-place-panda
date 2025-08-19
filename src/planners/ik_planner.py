@@ -10,11 +10,11 @@ class IKPlanner:
         self.iterations = iterations
         self.tol = tol
 
-    def solve(self, q_init_full, target_SE3):
+    def solve(self, q_init, target_SE3):
         model = self.env.pin.model
         data = self.env.pin.data
         ee_frame_id = self.env.pin.ee_frame_id
-        q = np.array(q_init_full[:-2], dtype=float)
+        q = np.array(q_init, dtype=float)
         i = 0
         while True:
             pin.forwardKinematics(model, data, q)
