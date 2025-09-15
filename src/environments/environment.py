@@ -13,15 +13,18 @@ class Environment:
         self.viewer = Viewer()
         self.goal = None
         self.pin = PinRobot(urdf_path)
+        OPEN_GRIPPER = np.array([0.04, 0.04])
+        CLOSED_GRIPPER = np.array([0, 0])
+        self.gripper = OPEN_GRIPPER
     
     def set_state(self, pose):
-        self.robot.data.qpos = pose
+        self.robot.data.qpos = np.concatenate((pose, self.gripper))
 
     def get_state(self):
         return np.copy(self.robot.data.qpos)
     
     def set_goal_joint(self, goal_pose):
-        self.goal = goal_pose
+        self.goal = np.concatenate((goal_pose, self.gripper))
     
     def set_goal_cartesian(self, pos: np.ndarray, rot: np.ndarray = None):
         R = rot if rot is not None else np.eye(3)

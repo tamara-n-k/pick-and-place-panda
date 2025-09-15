@@ -1,5 +1,5 @@
 <mujoco model="pick_place_scene">
-  <include file="mjx_panda_nohand.xml"/>
+  <include file="mjx_panda.xml"/>
 
 
 
