@@ -27,7 +27,7 @@ class Environment:
         self.goal = np.concatenate((goal_pose, self.gripper))
     
     def set_goal_cartesian(self, pos: np.ndarray, rot: np.ndarray = None):
-        R = rot if rot is not None else np.eye(3)
+        R = rot if rot is not None else pin.utils.rpyToMatrix(0.0, np.pi, 0.0)#pitch = pi --> face downwards
         self.goal_cartesian = pin.SE3(R, np.asarray(pos))
 
     def get_goal(self):
