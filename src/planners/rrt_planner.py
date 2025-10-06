@@ -4,6 +4,9 @@ from ompl import geometric as og
 
 
 class RRTPlanner:
+    """
+    takes joint positions and plans trajectory from start point to end point
+    """
     def __init__(self, environment):
         self.env = environment
         robot = self.env.robot
@@ -37,7 +40,7 @@ class RRTPlanner:
             self.goal[i] = goal[i]
 
         #collision detection
-    def is_valid(self, state):
+    def collistion_free(self, state):
         robot = self.env.robot
         for i in range(robot.n_dofs):
             robot.data.qpos[i] = state[i]
@@ -53,7 +56,7 @@ class RRTPlanner:
             raise ValueError("Start and goal states must be defined")
         
         si = ob.SpaceInformation(self.space)
-        si.setStateValidityChecker(ob.StateValidityCheckerFn(self.is_valid))
+        si.setStateValidityChecker(ob.StateValidityCheckerFn(self.collistion_free))
         si.setup()
 
         pdef = ob.ProblemDefinition(si)

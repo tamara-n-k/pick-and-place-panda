@@ -1,6 +1,9 @@
 import mujoco
 
 class Robot:
+    """
+    holds the robot model data for the mujoco simulation
+    """
     def __init__(self, xml_path):
         if xml_path:
             self.load_model(xml_path)

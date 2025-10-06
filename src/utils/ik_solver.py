@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import least_squares
 
 
-class IKPlanner:
+class IKSolver:
     """
     computes the inverse kinematics of the cartesian position using Least Squares "trf":
     as the panda is a 7dof robot and task space is 6dof, the solutions can be different
@@ -33,7 +33,7 @@ class IKPlanner:
 
             # Split orientation and position errors
             ori_weight = 1.0
-            pos_weight = 100.0 #0.01 precision
+            pos_weight = 10.0 #0.01 precision
             ori_err = err6[:3] * ori_weight
             pos_err = err6[3:] * pos_weight
 

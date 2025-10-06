@@ -1,6 +1,7 @@
 from planners.rrt_planner import RRTPlanner
 from environments.environment import Environment
-from planners.ik_planner import IKPlanner
+from environments.viewer import Viewer
+from utils.ik_solver import IKSolver
 import numpy as np
 import pinocchio as pin
 
@@ -17,9 +18,9 @@ if __name__ == "__main__":
     env = Environment(xml_path, urdf_path)
     env.set_state(q_start)
     
-    #set cartesian position
+    # #set cartesian position
     env.set_goal_cartesian(goal_cartesian)
-    ik = IKPlanner(env)
+    ik = IKSolver(env)
     q_goal = ik.solve(q_start, env.goal_cartesian)
     env.set_goal_joint(q_goal)
 
@@ -27,5 +28,5 @@ if __name__ == "__main__":
     planner = RRTPlanner(env)
     planned_path = planner.find_path(env.get_state(), env.get_goal())
     if planned_path:
-        env.run_viewer(planned_path)
+        Viewer.run_trajectory(env, planned_path)
 
