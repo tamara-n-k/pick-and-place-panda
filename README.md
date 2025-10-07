@@ -57,8 +57,25 @@ Cartesian goal → IKPlanner → q_goal → RRTPlanner → joint trajectory → 
 
 ## Some Theory
 
-Joint ID vs. Frame ID:
+**Joint ID vs. Frame ID**
 
-    A joint describes a degree of freedom in the kinematic chain (rotation, translation, etc.).
+A joint describes a degree of freedom in the kinematic chain (rotation, translation, etc.).
 
-    A frame is a coordinate system attached to a joint, link, or custom location in your robot model.
+A frame is a coordinate system attached to a joint, link, or custom location in your robot model.
+
+**Body vs. Site**
+
+A **body** is a rigid object in the model. Each body has:
+- a position
+- an orientation
+- physical properties like mass, intertia
+
+They define the structure of the robot: links, base, end-effector etc.
+
+A **site** is just a fixed coordinate frame (position + orientation) attached to a body. It has no mass, no inertia and doesn't affect physics. We use it to track a specific location on the robot.
+
+Example:
+  
+    <body name="hand">
+    <site name="ee_site" pos="0 0 0.05" size="0.01 0.01 0.01" rgba="1 0 0 1"/>
+    </body>
