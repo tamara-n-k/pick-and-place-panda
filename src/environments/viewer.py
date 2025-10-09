@@ -8,7 +8,7 @@ class Viewer:
     executes the mujoco simulator
     """
     @staticmethod
-    def run_trajectory(env, trajectory, record=True, draw=True):
+    def run_trajectory(env, trajectory, speed = 1.0, record=True, draw=True):
         executed_positions = []
 
         with mujoco.viewer.launch_passive(env.robot.model, env.robot.data) as viewer:
@@ -50,7 +50,7 @@ class Viewer:
                         viewer.user_scn.ngeom += 1
 
                 viewer.sync()
-                time.sleep(0.01)
+                time.sleep(0.01/speed)
                 
             last_ee_pos = executed_positions[-1]
             print("Final executed EE position:", last_ee_pos)
