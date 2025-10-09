@@ -12,6 +12,7 @@ class Viewer:
         executed_positions = []
 
         with mujoco.viewer.launch_passive(env.robot.model, env.robot.data) as viewer:
+                
             for i in range(trajectory.getStateCount()):
                 state = trajectory.getState(i)
                 env.apply_action(state)
@@ -19,9 +20,24 @@ class Viewer:
                 if record:
                     ee_pos = env.robot.data.site("gripper").xpos.copy()
                     executed_positions.append(ee_pos)
-                # draw trajectory
+
                 if draw:
                     viewer.user_scn.ngeom = 0 #clear previous geometrics
+                    
+                #draw goal
+                if hasattr(env, "goal_cartesian") and env.goal_cartesian is not None:
+                    goal_pos = env.goal_cartesian.translation
+                    mujoco.mjv_initGeom(
+                        viewer.user_scn.geoms[viewer.user_scn.ngeom],
+                        type=mujoco.mjtGeom.mjGEOM_SPHERE,
+                        size=[0.05, 0, 0], #radius = 50 mm
+                        pos=goal_pos,
+                        mat=np.eye(3).flatten(),
+                        rgba=[0, 1, 0, 1],
+                    )
+                    viewer.user_scn.ngeom += 1
+
+                    # executed path
                     for p in executed_positions:
                         mujoco.mjv_initGeom(
                             viewer.user_scn.geoms[viewer.user_scn.ngeom],
@@ -32,20 +48,13 @@ class Viewer:
                             rgba=[1, 0, 0, 0.8],  # red, semi-transparent
                         )
                         viewer.user_scn.ngeom += 1
-                #draw goal
-                if hasattr(env, "goal_cartesian") and env.goal_cartesian is not None:
-                    goal_pos = env.goal_cartesian.translation
-                    mujoco.mjv_initGeom(
-                        viewer.user_scn.geoms[viewer.user_scn.ngeom],
-                        type=mujoco.mjtGeom.mjGEOM_SPHERE,
-                        size=[0.02, 0, 0], #radius = 20 mm
-                        pos=goal_pos,
-                        mat=np.eye(3).flatten(),
-                        rgba=[0, 1, 0, 1],
-                    )
-                    viewer.user_scn.ngeom += 1
+
                 viewer.sync()
                 time.sleep(0.01)
+                
+            last_ee_pos = executed_positions[-1]
+            print("Final executed EE position:", last_ee_pos)
+            print("Goal position:", env.goal_cartesian.translation)
 
             # Keep window open
             while viewer.is_running():
