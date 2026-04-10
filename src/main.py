@@ -3,8 +3,7 @@ from environments.environment import Environment
 from utils.ik_solver import IKSolver
 from tasks.pick_and_place import PickAndPlace
 
-import numpy as np
-
+import time
 
 if __name__ == "__main__":
 
@@ -18,6 +17,15 @@ if __name__ == "__main__":
 
     for plant in plants:
         task.pick_plant(plant)
-        drop_pos = env.get_body_pos(plant) + np.array([0.2, 0, 0]) # drop 20cm to the right
+    
+    print("Task completed.")
+    try:
+        while env.mj_viewer.is_running():
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("Exiting...")
+        pass
+
+    
 
 
