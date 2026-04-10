@@ -41,11 +41,6 @@ class Environment:
 
     def get_goal(self):
         return self.goal
-    
-    def apply_action(self, q_target):
-        for j in range(self.robot.n_dofs):
-            self.robot.data.qpos[j] = q_target[j]#passes the joint position of the planner to the model
-        mujoco.mj_forward(self.robot.model, self.robot.data)
 
     def get_body_pos(self, body_name):
         return self.robot.data.body(body_name).xpos.copy()

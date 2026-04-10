@@ -14,7 +14,7 @@ if __name__ == "__main__":
     
     env = Environment(xml_path, urdf_path, mesh_dir)
     task = PickAndPlace(env, RRTPlanner(env), IKSolver(env.pin))
-    plants = ["plant_1"]
+    plants = ["plant_5"]
 
     for plant in plants:
         task.pick_plant(plant)
