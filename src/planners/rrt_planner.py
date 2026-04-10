@@ -46,7 +46,7 @@ class RRTPlanner:
             robot.data.qpos[i] = state[i]
 
         mujoco.mj_forward(robot.model, robot.data)
-        return robot.data.ncon == 0  # No contacts = collision-free
+        return robot.data.ncon <=2  # allow up to 2 contacts (gripper touching the plant)
 
     def find_path(self, start = None, goal = None):
         #ompl planning
@@ -67,13 +67,12 @@ class RRTPlanner:
         planner.setProblemDefinition(pdef)
         planner.setup()
 
-        if planner.solve(5.0):#find solution within 5 seconds
+        if planner.solve(2.0):#find solution within 5 seconds
             path = pdef.getSolutionPath()
-            path.interpolate()  # smoother
-            #TODO simplifyer
-
-
-            print("Found path with", path.getStateCount(), "states")
+            ps = og.PathSimplifier(si)
+            ps.simplify(path, 1.0) # simplify the path with a time limit of 1 second
+            path.interpolate(200) 
+            print(f"Found path with {path.getStateCount()} states")
             return path
         else:
             print("No path found")
