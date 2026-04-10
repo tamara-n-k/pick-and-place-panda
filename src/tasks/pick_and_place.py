@@ -7,11 +7,16 @@ class PickAndPlace:
         self.env = env
         self.planner = planner
         self.ik = ik_solver
-        self.approach_margin = 0.15 
+        self.approach_margin = 0.3
         
     def get_grasp_point(self, body_name):
-        base_pos = self.env.get_body_pos(body_name)
-        grasp_pos = base_pos + np.array([0, 0, 0.02])#add 2cm to the top of the plant as the grasp point
+        plant_world_pos = self.env.get_body_pos(body_name) 
+        robot_base_pos = self.env.robot.data.body("link0").xpos.copy()
+        
+        # Calculate position relative to the robot base
+        relative_pos = plant_world_pos - robot_base_pos
+        grasp_pos = relative_pos + np.array([0, 0, 0.02])
+        
         return grasp_pos
 
     def execute_move(self, target_pos):
@@ -19,6 +24,7 @@ class PickAndPlace:
             target_pos = self.get_grasp_point(target_pos)
         target_SE3 = pin.SE3.Identity()
         target_SE3.translation = target_pos
+        target_SE3.rotation = pin.utils.rotate('x', np.pi) # face downwards
         
         full_q_start = self.env.get_state()
         q_start_arm = full_q_start[:7] # extract arm joints, ignore gripper state
@@ -69,9 +75,6 @@ class PickAndPlace:
 
     def set_gripper(self, open=True):
         target = 0.04 if open else 0.0
-
         self.env.robot.data.ctrl[7] = target
-
-        
         for _ in range(50):
             self.env.step()
