@@ -15,6 +15,18 @@ class RRTPlanner:
         self.space = ob.RealVectorStateSpace(robot.n_arm_dofs)#configuration space
         self.set_bounds(self.env.robot.arm_lower, self.env.robot.arm_upper)
 
+        # setup space information
+        self.si = ob.SpaceInformation(self.space)
+        self.si.setStateValidityChecker(ob.StateValidityCheckerFn(self.collistion_free))
+        self.si.setup()
+        # problem definition
+        self.pdef = ob.ProblemDefinition(self.si)
+
+        self.planner = og.RRTstar(self.si) 
+        self.planner.setRange(0.2) # Step size
+        self.planner.setProblemDefinition(self.pdef)
+        self.planner.setup()
+
         self.start = None
         self.goal = None
 
@@ -44,6 +56,7 @@ class RRTPlanner:
         robot = self.env.robot
         for i in range(robot.n_arm_dofs):
             robot.data.qpos[i] = state[i]
+
         mujoco.mj_forward(robot.model, robot.data)
         return robot.data.ncon <=2  # allow up to 2 contacts (gripper touching the plant)
 
@@ -53,26 +66,27 @@ class RRTPlanner:
             self.define_start_goal_positions(start, goal)
         elif self.start is None or self.goal is None:
             raise ValueError("Start and goal states must be defined")
+        # Clear previous solutions
+        self.pdef.clearSolutionPaths()
+        self.pdef.clearStartStates()
+        self.pdef.setStartAndGoalStates(self.start, self.goal)
+        self.planner.clear()
+
         
-        si = ob.SpaceInformation(self.space)
-        si.setStateValidityChecker(ob.StateValidityCheckerFn(self.collistion_free))
-        si.setup()
-
-        pdef = ob.ProblemDefinition(si)
-        pdef.setStartAndGoalStates(self.start, self.goal)
-        # planner = og.RRTConnect(si)  # much faster and often cleaner
-        planner = og.RRTstar(si)
-        planner.setRange(0.2)
-        planner.setProblemDefinition(pdef)
-        planner.setup()
-
-        if planner.solve(2.0):#find solution within 2 seconds
-            path = pdef.getSolutionPath()
-            ps = og.PathSimplifier(si)
-            ps.simplify(path, 1.0) # simplify the path with a time limit of 1 second
-            path.interpolate(200) 
-            print(f"Found path with {path.getStateCount()} states")
-            return path
+        if self.planner.solve(2.0):
+            # only return the path if it actually reached the goal
+            if self.pdef.hasExactSolution():
+                path = self.pdef.getSolutionPath()
+                
+                ps = og.PathSimplifier(self.si)
+                ps.simplify(path, 1.0)
+                path.interpolate(200) 
+                
+                print(f"Found EXACT path with {path.getStateCount()} states")
+                return path
+            else:
+                print("Found only an APPROXIMATE path (not safe to execute)")
+                return None
         else:
-            print("No path found")
+            print("No path found at all")
             return None
