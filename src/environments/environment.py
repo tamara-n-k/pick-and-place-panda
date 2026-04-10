@@ -4,6 +4,8 @@ import pinocchio as pin
 
 from robot.robot import Robot
 from robot.pin_robot import PinRobot
+from environments.viewer import Viewer
+
 
 class Environment:
     """
@@ -14,12 +16,18 @@ class Environment:
         self.robot = Robot(mjcf_path)
         self.goal = None
         self.pin = PinRobot(urdf_path, mesh_dir)
+        self.viewer = Viewer
         OPEN_GRIPPER = np.array([0.04, 0.04])
         CLOSED_GRIPPER = np.array([0, 0])
         self.gripper = OPEN_GRIPPER
-    
+        self.set_state(np.array([0, -0.785, 0, -2.356, 0, 1.571, 0.785]))
+
+    def step(self):
+        mujoco.mj_step(self.robot.model, self.robot.data)
+
     def set_state(self, pose):
         self.robot.data.qpos = np.concatenate((pose, self.gripper))
+        self.step()
 
     def get_state(self):
         return np.copy(self.robot.data.qpos)
@@ -38,3 +46,6 @@ class Environment:
         for j in range(self.robot.n_dofs):
             self.robot.data.qpos[j] = q_target[j]#passes the joint position of the planner to the model
         mujoco.mj_forward(self.robot.model, self.robot.data)
+
+    def get_body_pos(self, body_name):
+        return self.robot.data.body(body_name).xpos.copy()
