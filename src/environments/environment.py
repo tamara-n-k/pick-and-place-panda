@@ -16,7 +16,7 @@ class Environment:
         self.robot = Robot(mjcf_path)
         self.goal = None
         self.pin = PinRobot(urdf_path, mesh_dir)
-        self.viewer = Viewer
+        self.mj_viewer = mujoco.viewer.launch_passive(self.robot.model, self.robot.data) # passive viewer for visualization
         OPEN_GRIPPER = np.array([0.04, 0.04])
         CLOSED_GRIPPER = np.array([0, 0])
         self.gripper = OPEN_GRIPPER

@@ -1,6 +1,8 @@
 import numpy as np
 import pinocchio as pin
 
+from environments.viewer import Viewer
+
 
 class PickAndPlace:
     def __init__(self, env, planner, ik_solver):
@@ -49,7 +51,7 @@ class PickAndPlace:
                 q_step = np.array([state[i] for i in range(7)])
                 full_path.append(q_step)
             
-            self.env.viewer.run_trajectory(self.env, full_path, speed=0.5)
+            Viewer.run_trajectory(self.env, full_path, speed=0.5)
             return True
         print(f"No valid path found for target position: {target_pos}")
         return False
@@ -65,13 +67,17 @@ class PickAndPlace:
         self.execute_move(approach_pos)
         
         # descend
+        print(f"--- Descending to grasp {plant_name} ---")
         self.execute_move(grasp_pos)
         
         # close Gripper
+        print(f"--- Grasping {plant_name} ---")
         self.set_gripper(open=False)
         
         # lift
+        print(f"--- Lifting {plant_name} ---")
         self.execute_move(approach_pos)
+
 
     def set_gripper(self, open=True):
         target = 0.04 if open else 0.0
