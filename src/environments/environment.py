@@ -9,11 +9,11 @@ class Environment:
     """
     holds robot's states: current position, goal position
     """
-    def __init__(self, mjcf_path, urdf_path = None):
+    def __init__(self, mjcf_path, urdf_path = None, mesh_dir = None):
         #mujoco robot
         self.robot = Robot(mjcf_path)
         self.goal = None
-        self.pin = PinRobot(urdf_path)
+        self.pin = PinRobot(urdf_path, mesh_dir)
         OPEN_GRIPPER = np.array([0.04, 0.04])
         CLOSED_GRIPPER = np.array([0, 0])
         self.gripper = OPEN_GRIPPER
