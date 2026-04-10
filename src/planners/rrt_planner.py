@@ -13,7 +13,7 @@ class RRTPlanner:
 
         self.bounds = ob.RealVectorBounds(robot.n_dofs)#robot's limits
         self.space = ob.RealVectorStateSpace(robot.n_dofs)#configuration space
-        self.set_bounds(self.env.robot.lower_limits, self.env.robot.upper_limits)
+        self.set_bounds(self.env.robot.arm_lower, self.env.robot.arm_upper)
 
         self.start = None
         self.goal = None
@@ -29,22 +29,21 @@ class RRTPlanner:
 
     def define_start_goal_positions(self, start, goal):
         robot = self.env.robot
-        assert len(start) == robot.n_dofs, "Start configuration does not match DoF"
-        assert len(goal) == robot.n_dofs, "Goal configuration does not match DoF"
+        assert len(start) == robot.n_arm_dofs, "Start configuration does not match DoF"
+        assert len(goal) == robot.n_arm_dofs, "Goal configuration does not match DoF"
         
         self.start = ob.State(self.space)
         self.goal = ob.State(self.space)
 
-        for i in range(robot.n_dofs):
+        for i in range(robot.n_arm_dofs):
             self.start[i] = start[i]
             self.goal[i] = goal[i]
 
         #collision detection
     def collistion_free(self, state):
         robot = self.env.robot
-        for i in range(robot.n_dofs):
+        for i in range(robot.n_arm_dofs):
             robot.data.qpos[i] = state[i]
-
         mujoco.mj_forward(robot.model, robot.data)
         return robot.data.ncon <=2  # allow up to 2 contacts (gripper touching the plant)
 
@@ -67,7 +66,7 @@ class RRTPlanner:
         planner.setProblemDefinition(pdef)
         planner.setup()
 
-        if planner.solve(2.0):#find solution within 5 seconds
+        if planner.solve(2.0):#find solution within 2 seconds
             path = pdef.getSolutionPath()
             ps = og.PathSimplifier(si)
             ps.simplify(path, 1.0) # simplify the path with a time limit of 1 second

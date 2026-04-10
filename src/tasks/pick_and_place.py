@@ -28,8 +28,9 @@ class PickAndPlace:
         target_SE3.translation = target_pos
         target_SE3.rotation = pin.utils.rotate('x', np.pi) # face downwards
         
-        full_q_start = self.env.get_state()
-        q_start_arm = full_q_start[:7] # extract arm joints, ignore gripper state
+        current_q = self.env.get_state()
+        q_start_arm = current_q[:7] # extract arm joints, ignore gripper state
+        q_gripper = current_q[7:] # gripper state
         q_goal_arm = self.ik.solve(q_start_arm, target_SE3)
         
         if q_goal_arm is None:
@@ -37,24 +38,25 @@ class PickAndPlace:
             return False
         
         print(f"Planning move from {q_start_arm} to {q_goal_arm}")
-        current_gripper = self.env.get_state()[7:] # gripper state remains unchanged during the move
-        path_arm = self.planner.find_path(full_q_start, np.concatenate((q_goal_arm, current_gripper)))
+        path_arm = self.planner.find_path(q_start_arm, q_goal_arm)
+
         if path_arm:
-            states = path_arm.getStates()
-            
-            current_gripper = self.env.get_state()[7:]
-            
-            # Convert each state to a numpy array and concatenate the gripper
-            full_path = []
-            for state in states:
-                # OMPL states need to be converted to numpy/list
-                q_step = np.array([state[i] for i in range(7)])
-                full_path.append(q_step)
-            
+            ompl_states = path_arm.getStates()
+            path_list_7dof = []
+            for i in range(len(ompl_states)):
+                state_7dof = np.array([ompl_states[i][j] for j in range(7)]) # extract only the arm joints
+                path_list_7dof.append(state_7dof)
+
+            q_gripper = self.env.get_state()[7:] # current gripper state
+            full_path = [np.concatenate((q_arm, q_gripper)) for q_arm in path_list_7dof]
+
             Viewer.run_trajectory(self.env, full_path, speed=0.5)
+            self.env.set_state(full_path[-1])
             return True
+        
         print(f"No valid path found for target position: {target_pos}")
         return False
+
 
     def pick_plant(self, plant_name):
         grasp_pos = self.get_grasp_point(plant_name)

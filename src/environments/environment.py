@@ -2,7 +2,7 @@ import numpy as np
 import mujoco
 import pinocchio as pin
 
-from robot.robot import Robot
+from robot.mj_robot import MJRobot
 from robot.pin_robot import PinRobot
 from environments.viewer import Viewer
 
@@ -13,7 +13,7 @@ class Environment:
     """
     def __init__(self, mjcf_path, urdf_path = None, mesh_dir = None):
         #mujoco robot
-        self.robot = Robot(mjcf_path)
+        self.robot = MJRobot(mjcf_path)
         self.goal = None
         self.pin = PinRobot(urdf_path, mesh_dir)
         self.mj_viewer = mujoco.viewer.launch_passive(self.robot.model, self.robot.data) # passive viewer for visualization
@@ -26,7 +26,12 @@ class Environment:
         mujoco.mj_step(self.robot.model, self.robot.data)
 
     def set_state(self, pose):
-        self.robot.data.qpos = np.concatenate((pose, self.gripper))
+        if len(pose) == 9:
+            self.robot.data.qpos[:] = pose
+        elif len(pose) == 7:
+            self.robot.data.qpos[:7] = pose
+        else:
+            raise ValueError(f"Expected 7 or 9 joints, got {len(pose)}")
         self.step()
 
     def get_state(self):

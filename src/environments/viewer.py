@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import mujoco.viewer
-from robot.robot import Robot
+from robot.mj_robot import MJRobot
 
 class Viewer:
     """
