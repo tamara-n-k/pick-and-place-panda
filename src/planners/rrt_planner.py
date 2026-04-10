@@ -11,8 +11,8 @@ class RRTPlanner:
         self.env = environment
         robot = self.env.robot
 
-        self.bounds = ob.RealVectorBounds(robot.n_dofs)#robot's limits
-        self.space = ob.RealVectorStateSpace(robot.n_dofs)#configuration space
+        self.bounds = ob.RealVectorBounds(robot.n_arm_dofs)#robot's limits
+        self.space = ob.RealVectorStateSpace(robot.n_arm_dofs)#configuration space
         self.set_bounds(self.env.robot.arm_lower, self.env.robot.arm_upper)
 
         self.start = None
