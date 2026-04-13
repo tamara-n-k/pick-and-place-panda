@@ -66,6 +66,13 @@ class RRTPlanner:
             self.define_start_goal_positions(start, goal)
         elif self.start is None or self.goal is None:
             raise ValueError("Start and goal states must be defined")
+        # Check validity of start and goal states before planning
+        if not self.si.isValid(self.start()):
+            print("CRITICAL: Start state is in collision!")
+            return None
+        if not self.si.isValid(self.goal()):
+            print("CRITICAL: Goal state is in collision! Check your IK or collision boxes.")
+            return None
         # Clear previous solutions
         self.pdef.clearSolutionPaths()
         self.pdef.clearStartStates()
