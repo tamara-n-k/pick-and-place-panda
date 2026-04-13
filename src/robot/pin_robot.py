@@ -18,14 +18,15 @@ class PinRobot:
         
         self.data = self.model.createData()
         self.geom_data = pin.GeometryData(self.geom_model)
-
-    def forward_kinematics(self, q):
-        """
-        computes the end-effector SE3 pose for the given joint configuration q
-        """
+    
+    def forward_kinematics(self, q, update_geom=False):
         q = np.array(q)
+        # update joints
         pin.forwardKinematics(self.model, self.data, q)
+        # update frames
         pin.updateFramePlacement(self.model, self.data, self.ee_frame_id)
+        if update_geom:
+            pin.updateGeometryPlacements(self.model, self.data, self.geom_model, self.geom_data)
         return self.data.oMf[self.ee_frame_id] # pin.SE3 format
     
     def frame_error(self, q, target_SE3):
@@ -33,10 +34,14 @@ class PinRobot:
         return pin.log(current.inverse() * target_SE3).vector
     
     def check_collisions(self, q):
-        pin.computeCollisions(self.model, self.data, self.geom_model, self.geom_data, q, False)
+        # Standard FK update
+        pin.forwardKinematics(self.model, self.data, q)
+        # Sync geometry shapes to the joints
+        pin.updateGeometryPlacements(self.model, self.data, self.geom_model, self.geom_data)
+        # Perform the check
+        pin.computeCollisions(self.geom_model, self.geom_data, False)
         
-        min_dist = float('inf')
         for res in self.geom_data.collisionResults:
-            if res.min_distance < min_dist:
-                min_dist = res.min_distance
-        return min_dist
+            if res.isCollision():
+                return True
+        return False
