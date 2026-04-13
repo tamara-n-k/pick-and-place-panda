@@ -39,6 +39,10 @@ class PickAndPlace:
         
         print(f"Planning move from {q_start_arm} to {q_goal_arm}")
         path_arm = self.planner.find_path(q_start_arm, q_goal_arm)
+        if path_arm is None:
+            print(f"Planning failed for target position: {target_pos}")
+            return False
+        
         pdef = self.planner.pdef
 
         if pdef.hasExactSolution():
