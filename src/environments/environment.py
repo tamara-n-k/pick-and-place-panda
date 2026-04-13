@@ -28,7 +28,16 @@ class Environment:
             self.robot.data.qpos[:7] = pose
         else:
             raise ValueError(f"Expected 7 or 9 joints, got {len(pose)}")
-        self.step()
+        self.robot.data.qvel[:] = 0
+        self.robot.data.qacc[:] = 0
+
+        mujoco.mj_forward(self.robot.model, self.robot.data)
+        if hasattr(self, 'pin'):
+            self.pin.forward_kinematics(pose, update_geom=True) # update pinocchio geometry for collision checking
+
+        if self.mj_viewer.is_running():
+            self.mj_viewer.sync()
+
 
     def get_state(self):
         return np.copy(self.robot.data.qpos)
