@@ -62,25 +62,38 @@ class PickAndPlace:
     def pick_plant(self, plant_name):
         grasp_pos = self.get_grasp_point(plant_name)
         # open gripper
-        self.set_gripper(open=True)
+        if not self.env.robot.set_gripper_ctrl(width=0.04):
+            print("Failed to open gripper.")
+            return
+        for _ in range(50):
+            self.env.step()
         
         # approach
         print(f"--- Picking {plant_name} ---")
         approach_pos = grasp_pos + np.array([0, 0, self.approach_margin])
-        self.execute_move(approach_pos)
+        if not self.execute_move(approach_pos):
+            print("Failed to approach plant.")
+            return
         
         # descend
         print(f"--- Descending to grasp {plant_name} ---")
-        self.execute_move(grasp_pos)
-        
+        if not self.execute_move(grasp_pos):
+            print("Failed to descend to grasp plant.")
+            return
+
         # close Gripper
         print(f"--- Grasping {plant_name} ---")
-        self.set_gripper(open=False)
-        
+        if not self.env.robot.set_gripper_ctrl(width=0.0):
+            print("Failed to close gripper.")
+            return
+        for _ in range(50):
+            self.env.step()
+
         # lift
         print(f"--- Lifting {plant_name} ---")
-        self.execute_move(approach_pos)
-
+        if not self.execute_move(approach_pos):
+            print("Failed to lift plant.")
+            return
 
     def set_gripper(self, open=True):
         target = 0.04 if open else 0.0
