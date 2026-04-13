@@ -94,9 +94,3 @@ class PickAndPlace:
         if not self.execute_move(approach_pos):
             print("Failed to lift plant.")
             return
-
-    def set_gripper(self, open=True):
-        target = 0.04 if open else 0.0
-        self.env.robot.data.ctrl[7] = target
-        for _ in range(50):
-            self.env.step()
