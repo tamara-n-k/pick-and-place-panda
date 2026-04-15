@@ -18,7 +18,14 @@ class PinRobot:
         
         self.data = self.model.createData()
         self.geom_data = pin.GeometryData(self.geom_model)
-    
+        
+    def update_state(self, q):
+        q = np.array(q)
+        pin.forwardKinematics(self.model, self.data, q)
+        pin.updateFramePlacements(self.model, self.data)
+        pin.updateGeometryPlacements(self.model, self.data, self.geom_model, self.geom_data)
+        self.q = q
+
     def forward_kinematics(self, q, update_geom=False):
         q = np.array(q)
         # update joints

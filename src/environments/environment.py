@@ -33,14 +33,14 @@ class Environment:
 
         mujoco.mj_forward(self.robot.model, self.robot.data)
         if hasattr(self, 'pin'):
-            self.pin.forward_kinematics(pose, update_geom=True) # update pinocchio geometry for collision checking
+            self.pin.update_state(pose) # update pinocchio geometry for collision checking
 
         if self.mj_viewer.is_running():
             self.mj_viewer.sync()
 
 
     def get_state(self):
-        return np.copy(self.robot.data.qpos)
+        return np.copy(self.pin.q)
 
     def get_body_pos(self, body_name):
         return self.robot.data.body(body_name).xpos.copy()
