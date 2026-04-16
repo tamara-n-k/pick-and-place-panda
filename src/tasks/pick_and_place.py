@@ -9,10 +9,10 @@ class PickAndPlace:
         self.env = env
         self.planner = planner
         self.ik = ik_solver
-        self.grasp_sampler = GraspSampler(self.env, self.ik)
+        self.grasp_sampler = GraspSampler(self.env, self.ik, self.planner)
         self.approach_margin = 0.3
 
-    def execute_move(self, target_conf):
+    def execute_move(self, target_conf, plant_name):
         if isinstance(target_conf, np.ndarray) and target_conf.shape == (3,):
             target_pos = target_conf.astype(np.float64).flatten()
             target_SE3 = pin.SE3.Identity()
@@ -32,7 +32,7 @@ class PickAndPlace:
             return False
         
         print(f"Planning move from {q_start_arm} to {q_goal_arm}")
-        path_arm = self.planner.find_path(q_start_arm, q_goal_arm)
+        path_arm = self.planner.find_path(q_start_arm, q_goal_arm, plant_name)
         if path_arm is None:
             print(f"Planning failed for target position: {target_conf}")
             return False
@@ -59,12 +59,14 @@ class PickAndPlace:
 
     def pick_plant(self, plant_name):
         current_q = self.env.get_state()
+        print(f"--- Sampling valid grasp for {plant_name} ---")
         q_grasp, grasp_SE3 = self.grasp_sampler.get_valid_grasp(plant_name, current_q[:7])
         if q_grasp is None:
             print(f"No valid grasp found for {plant_name}")
             return False
+        print(f"Found valid grasp for {plant_name} at position {grasp_SE3.translation}")
         approach_SE3 = grasp_SE3.copy()
-        approach_SE3.translation -= grasp_SE3.rotation @ np.array([0, 0, self.approach_margin]) # move up along the approach direction
+        approach_SE3.translation -= grasp_SE3.rotation @ np.array([0, 0, 0.2]) # approach from above
         q_approach = self.ik.solve(current_q[:7], approach_SE3)
         # open gripper
         if not self.env.robot.set_gripper_ctrl(width=0.04):
@@ -76,13 +78,14 @@ class PickAndPlace:
         # approach
         print(f"--- Picking {plant_name} ---")
         
-        if not self.execute_move(q_approach):
+        if not self.execute_move(q_approach, plant_name):
             print("Failed to approach plant.")
             return
+        print(f"--- Reached approach pose {approach_SE3.translation} for {plant_name} ---")
         
         # descend
         print(f"--- Descending to grasp {plant_name} ---")
-        if not self.execute_move(q_grasp):
+        if not self.execute_move(q_grasp, plant_name):
             print("Failed to descend to grasp plant.")
             return
 
@@ -96,6 +99,6 @@ class PickAndPlace:
 
         # lift
         print(f"--- Lifting {plant_name} ---")
-        if not self.execute_move(approach_SE3):
+        if not self.execute_move(approach_SE3, plant_name):
             print("Failed to lift plant.")
             return
