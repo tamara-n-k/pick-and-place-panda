@@ -85,3 +85,9 @@ Example:
 In mujoco the unit scale is 1.0 m. So when loading a CAD model, it has to be imported with the scale parameter: ``` scale="0.001 0.001 0.001"```.For for primitive shapes like ```<geom type="box"> ``` mujoco will be using half-length parameters, so every scale you give has to be divided by 2 to get the actual size. 
 E. g. you want to define a box with 1.0 m lenght and 1.0 m width, you define it like this:
 ```<geom type="box" size="0.5 0.5 0.05"/>```
+
+**Bitmasks in Mujoco:**
+
+- contype: which layer am I on
+- coaffinity: what layers do i collide with
+A collision occurs if (geom1.contype & geom2.coaffinity) || (geom2.contype & geom1.coaffinity) != 0
