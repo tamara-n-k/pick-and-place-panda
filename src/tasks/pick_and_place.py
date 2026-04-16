@@ -32,7 +32,7 @@ class PickAndPlace:
             return False
         
         print(f"Planning move from {q_start_arm} to {q_goal_arm}")
-        path_arm = self.planner.find_path(q_start_arm, q_goal_arm, plant_name)
+        path_arm = self.planner.find_path_rrt(q_start_arm, q_goal_arm, plant_name)
         if path_arm is None:
             print(f"Planning failed for target position: {target_conf}")
             return False
@@ -65,6 +65,7 @@ class PickAndPlace:
             print(f"No valid grasp found for {plant_name}")
             return False
         print(f"Found valid grasp for {plant_name} at position {grasp_SE3.translation}")
+        # self.env.robot.data.mocap_pos[0] = grasp_SE3.translation
         approach_SE3 = grasp_SE3.copy()
         approach_SE3.translation -= grasp_SE3.rotation @ np.array([0, 0, 0.2]) # approach from above
         q_approach = self.ik.solve(current_q[:7], approach_SE3)
@@ -98,7 +99,8 @@ class PickAndPlace:
             self.env.step()
 
         # lift
+        q_lift = self.ik.solve(q_init=q_grasp, target_SE3=approach_SE3)
         print(f"--- Lifting {plant_name} ---")
-        if not self.execute_move(approach_SE3, plant_name):
+        if not self.execute_move(q_lift, plant_name):
             print("Failed to lift plant.")
             return

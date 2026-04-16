@@ -1,4 +1,4 @@
-from planners.rrt_planner import RRTPlanner
+from planners.motion_planner import MotionPlanner
 from environments.environment import Environment
 from utils.ik_solver import IKSolver
 from tasks.pick_and_place import PickAndPlace
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     mesh_dir = "model/franka_emika_panda/assets"
     
     env = Environment(xml_path, urdf_path, mesh_dir)
-    task = PickAndPlace(env, RRTPlanner(env), IKSolver(env.pin))
+    task = PickAndPlace(env, MotionPlanner(env), IKSolver(env.pin))
     plants = ["plant_5"]
 
     for plant in plants:
