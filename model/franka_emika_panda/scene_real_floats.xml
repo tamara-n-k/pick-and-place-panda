@@ -19,80 +19,43 @@
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
 
   <!-- table is 1.0mx1.2m-->
-    <body name="table" pos="0.6 0 0.4">
-      <geom type="box" size="0.4 0.6 0.05" rgba="0.5 0.5 0.5 1"/>
+    <body name="table" pos="0.6 0 0.2">
+      <geom name="table_collision" type="box" size="0.4 0.6 0.05" rgba="0.5 0.5 0.5 1" contype="1"/>
     </body>
   <!-- coordinate system origin is in right bottom corner -->
-    <body name="tray_pick_up" pos="0.3 0.1 0.45" euler="1.5708 0 0">
-      <geom type="mesh" mesh="tray_pick_up" rgba="0.2 0.2 0.2 1"/>
+    <body name="tray_pick_up" pos="0.3 0.1 0.25" euler="1.5708 0 0">
+      <geom name="tray_pick_up_mesh" type="mesh" mesh="tray_pick_up" rgba="0.2 0.2 0.2 1"/>
+      <geom name="tray_pick_up_collision" type="box" size="0.1 0.1 0.02" rgba="0 0 0 0" contype="1" conaffinity="1" group="3"/>
     </body>
 
-    <body name="tray_place_down" pos="0.25 -0.5 0.45" euler="1.5708 0 0">
-      <geom type="mesh" mesh="tray_place_down" rgba="0.2 0.2 0.2 1"/>
+    <body name="tray_place_down" pos="0.25 -0.5 0.25" euler="1.5708 0 0">
+      <geom name="tray_place_down_mesh" type="mesh" mesh="tray_place_down" rgba="0.2 0.2 0.2 1"/>
+      <geom name="tray_place_down_collision" type="box" size="0.1 0.1 0.02" rgba="0 0 0 0" contype="1" conaffinity="1" group="3"/>
     </body>
 
 <!-- plants -->
 <!-- right tray (place down)-->
-  <body name="plant_1" pos="0.35 -0.33 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
+  <body name="plant_1" pos="0.35 -0.33 0.3">
+    <geom name="plant_1_mesh" type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
+     <geom name="plant_1_cube" type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1" 
+        contype="2" 
+        conaffinity="2"/>
   </body>
 
-  <body name="plant_2" pos="0.52 -0.33 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
-  </body>
-<!-- left tray (pick up)-->
-<!-- 2. row -->
- <body name="plant_3" pos="0.45 0.25 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
+  <body name="plant_2" pos="0.52 -0.33 0.3">
+    <geom name="plant_2_mesh" type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
+     <geom name="plant_2_cube" type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1" 
+        contype="2" 
+        conaffinity="2"/>
   </body>
 
-  <body name="plant_4" pos="0.45 0.35 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
-  </body>
 
-  <body name="plant_5" pos="0.45 0.45 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
+  <body name="plant_5" pos="0.45 0.4 0.4">
+    <!-- <geom name="plant_5_mesh" type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/> -->
+    <geom name="plant_5_cube" type="box" size="0.0225 0.0225 0.0225" rgba="0.6 0.3 0.1 1" 
+        contype="2" 
+        conaffinity="2"/>
   </body>
-<!-- 4. row -->
-<body name="plant_6" pos="0.65 0.25 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
-  </body>
-
-  <body name="plant_7" pos="0.65 0.35 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
-  </body>
-
-  <body name="plant_8" pos="0.65 0.45 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
-  </body>
-<!-- 5. row -->
-  <body name="plant_9" pos="0.74 0.25 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
-  </body>
-
-  <body name="plant_10" pos="0.74 0.35 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
-  </body> 
-
-  <body name="plant_11" pos="0.74 0.45 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
-  </body> 
-<!-- 7. row -->
-  <body name="plant_12" pos="0.83 0.45 0.45">
-    <geom type="mesh" mesh="plant_mesh" pos="0 0 0.15" euler="1.5708 0 0" rgba="0 1 0 1"/>
-    <geom type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.02" rgba="0.6 0.3 0.1 1"/>
-  </body>  
 
   </worldbody>
 </mujoco>
