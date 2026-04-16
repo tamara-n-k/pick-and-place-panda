@@ -17,7 +17,7 @@ class RRTPlanner:
 
         # setup space information
         self.si = ob.SpaceInformation(self.space)
-        self.si.setStateValidityChecker(ob.StateValidityCheckerFn(self.collistion_free))
+        self.si.setStateValidityChecker(ob.StateValidityCheckerFn(self.collision_free))
         self.si.setup()
         # problem definition
         self.pdef = ob.ProblemDefinition(self.si)
@@ -52,7 +52,7 @@ class RRTPlanner:
             self.goal[i] = goal[i]
 
         #collision detection
-    def collistion_free(self, state):
+    def collision_free(self, state):
         robot = self.env.robot
         for i in range(robot.n_arm_dofs):
             robot.data.qpos[i] = state[i]
