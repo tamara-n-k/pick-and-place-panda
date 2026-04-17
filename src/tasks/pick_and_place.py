@@ -70,7 +70,7 @@ class PickAndPlace:
         approach_SE3.translation -= grasp_SE3.rotation @ np.array([0, 0, 0.2]) # approach from above
         q_approach = self.ik.solve(current_q[:7], approach_SE3)
         # open gripper
-        if not self.env.robot.set_gripper_ctrl(width=0.04):
+        if not self.env.robot.set_gripper_ctrl(width=0.08):
             print("Failed to open gripper.")
             return
         for _ in range(50):

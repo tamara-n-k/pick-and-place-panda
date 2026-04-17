@@ -8,7 +8,6 @@ class MJRobot:
         if xml_path:
             self.load_model(xml_path)
             self.get_joint_limits()
-            self.gripper_actuator_ids = [7]
 
     def load_model(self, xml_path):
         self.model = mujoco.MjModel.from_xml_path(xml_path)
@@ -20,13 +19,9 @@ class MJRobot:
         self.joint_names = [self.model.joint(i).name for i in range(self.model.njnt)]
 
 
-    def set_gripper_ctrl(self, width):
-        if not self.gripper_actuator_ids:
-            return False
-        
+    def set_gripper_ctrl(self, width):       
         print(f"Setting gripper control to width: {width}")
-        for idx in self.gripper_actuator_ids:
-            self.data.ctrl[idx] = width
+        self.data.ctrl[7] = width
         return True
 
     def get_joint_limits(self):
