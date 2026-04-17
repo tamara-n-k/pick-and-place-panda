@@ -33,7 +33,7 @@ class PickAndPlace:
 
         if linear:
             print(f"Executing linear move to {q_goal_arm}")
-            path_arm = self.planner.find_linear_path(q_start_arm, q_goal_arm, path_list_7dof)
+            path_arm = self.planner.find_linear_path(q_start_arm, q_goal_arm, plant_name, path_list_7dof)
             if path_arm is None:
                 print(f"Linear Planning failed for target position: {target_conf}")
                 return False
@@ -44,14 +44,14 @@ class PickAndPlace:
                 print(f"RRT Planning failed for target position: {target_conf}")
                 return False
         
-        pdef = self.planner.pdef
+            pdef = self.planner.pdef
 
-        if pdef.hasExactSolution():
-            ompl_states = path_arm.getStates()
-            path_list_7dof = []
-            for i in range(len(ompl_states)):
-                state_7dof = np.array([ompl_states[i][j] for j in range(7)]) # extract only the arm joints
-                path_list_7dof.append(state_7dof)
+            if pdef.hasExactSolution():
+                ompl_states = path_arm.getStates()
+                path_list_7dof = []
+                for i in range(len(ompl_states)):
+                    state_7dof = np.array([ompl_states[i][j] for j in range(7)]) # extract only the arm joints
+                    path_list_7dof.append(state_7dof)
 
         if len(path_list_7dof) > 0:
             full_path = [np.concatenate((q_arm, q_gripper)) for q_arm in path_list_7dof]
@@ -111,7 +111,6 @@ class PickAndPlace:
             return
 
 
-
     def pick_plant(self, plant_name):
         current_q = self.env.get_state()
         print(f"--- Sampling valid grasp for {plant_name} ---")
@@ -121,8 +120,8 @@ class PickAndPlace:
             return False
         print(f"Found valid grasp for {plant_name} at position {grasp_SE3.translation}")
         self.env.robot.data.mocap_pos[0] = grasp_SE3.translation
-        approach_SE3 = grasp_SE3.copy()
-        approach_SE3.translation -= grasp_SE3.rotation @ np.array([0, 0, 0.2]) # approach from above
+        approach_pos = grasp_SE3.translation + np.array([0, 0, 0.15]) 
+        approach_SE3 = pin.SE3(grasp_SE3.rotation, approach_pos)
         q_approach = self.ik.solve(current_q[:7], approach_SE3)
         # open gripper
         if not self.env.robot.set_gripper_ctrl(width=0.08):

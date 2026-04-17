@@ -68,30 +68,20 @@ class MotionPlanner:
             self.env.robot.model.geom_contype[target_geom_id] = 0
             self.env.robot.model.geom_conaffinity[target_geom_id] = 0
             self.env.robot.model.geom_contype[self.env.robot.model.geom("hand_capsule").id] = 0
-
-
         else:
             self.env.robot.model.geom_contype[target_geom_id] = 2
             self.env.robot.model.geom_conaffinity[target_geom_id] = 2
 
 
-    def find_path_rrt(self, start = None, goal = None, plant_name=None):
-        #ompl planning
-        if start is not None and goal is not None:
-            self.define_start_goal_positions(start, goal)
-        elif self.start is None or self.goal is None:
-            raise ValueError("Start and goal states must be defined")
-        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
-        # Check validity of start and goal states before planning
+    def _validate_states(self, plant_name):
         start_valid = self.si.isValid(self.start())
         goal_valid = self.si.isValid(self.goal())
 
         if not start_valid or not goal_valid:
-            if not start_valid: print("CRITICAL: Start state in collision!")
+            if not start_valid: 
+                print("CRITICAL: Start state in collision!")
             if not goal_valid: 
                 print("CRITICAL: Goal state in collision!")
-                # Debug: See what is touching
-                # self.env.set_state(self.goal) # q_goal is the joints for the descend target
                 mujoco.mj_forward(self.env.robot.model, self.env.robot.data)
                 
                 print(f"Number of contacts: {self.env.robot.data.ncon}")
@@ -100,17 +90,29 @@ class MotionPlanner:
                     geom1 = self.env.robot.model.geom(con.geom1).name
                     geom2 = self.env.robot.model.geom(con.geom2).name
                     print(f" CONTACT DETECTED: {geom1} <--> {geom2}")
-            
-            # RESTORE before returning
+            return False
+        return True
+    
+
+    def find_path_rrt(self, start = None, goal = None, plant_name=None):
+        #ompl planning
+        if start is not None and goal is not None:
+            self.define_start_goal_positions(start, goal)
+        elif self.start is None or self.goal is None:
+            raise ValueError("Start and goal states must be defined")
+        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
+
+        if not self._validate_states(plant_name):
             self.set_collision_mask(plant_name, ignore=False)
             return None
-        # Clear previous solutions
+            
+        # Clear OMPL's internal state before planning
         self.pdef.clearSolutionPaths()
         self.pdef.clearStartStates()
         self.pdef.setStartAndGoalStates(self.start, self.goal)
         self.planner.clear()
 
-        
+        path = None
         if self.planner.solve(2.0):
             # only return the path if it actually reached the goal
             if self.pdef.hasExactSolution():
@@ -129,7 +131,18 @@ class MotionPlanner:
             print("No path found at all")
             return None
         
-    def find_linear_path(self, q_start, q_goal, path_list):
+        
+    def find_linear_path(self, q_start, q_goal, plant_name, path_list):
+        if q_start is not None and q_goal is not None:
+            self.define_start_goal_positions(q_start, q_goal)
+        elif self.start is None or self.goal is None:
+            raise ValueError("Start and goal states must be defined")
+        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
+
+        if not self._validate_states(plant_name):
+            self.set_collision_mask(plant_name, ignore=False)
+            return None
+        
         steps = 100
         for i in range(steps):
             alpha = i / (steps - 1)
