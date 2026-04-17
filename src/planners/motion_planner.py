@@ -81,7 +81,7 @@ class MotionPlanner:
             self.define_start_goal_positions(start, goal)
         elif self.start is None or self.goal is None:
             raise ValueError("Start and goal states must be defined")
-        # self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
+        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
         # Check validity of start and goal states before planning
         start_valid = self.si.isValid(self.start())
         goal_valid = self.si.isValid(self.goal())
@@ -129,17 +129,14 @@ class MotionPlanner:
             print("No path found at all")
             return None
         
-    def linear_joint_interpolation(self, q_start, q_goal, steps=50):
-        path = []
+    def find_linear_path(self, q_start, q_goal, path_list):
+        steps = 100
         for i in range(steps):
-            # Linearly interpolate between 0.0 and 1.0
             alpha = i / (steps - 1)
             q_interp = (1 - alpha) * q_start + alpha * q_goal
-            
-            # Safety check: is the intermediate step in collision?
-            if self.env.check_collision(q_interp):
+            if not self.collision_free(q_interp):
                 print(f"Collision detected at step {i} of linear descent!")
                 return None
                 
-            path.append(q_interp)
-        return path
+            path_list.append(q_interp)
+        return path_list
