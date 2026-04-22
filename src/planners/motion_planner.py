@@ -2,6 +2,14 @@ import mujoco
 from ompl import base as ob
 from ompl import geometric as og
 
+class ValidityChecker(ob.StateValidityChecker):
+    def __init__(self, si, collision_func):
+        super().__init__(si)
+        self.collision_func = collision_func
+
+    def isValid(self, state):
+        return self.collision_func(state)
+    
 
 class MotionPlanner:
     """
@@ -17,7 +25,8 @@ class MotionPlanner:
 
         # setup space information
         self.si = ob.SpaceInformation(self.space)
-        self.si.setStateValidityChecker(ob.StateValidityCheckerFn(self.collision_free))
+        self.svc = ValidityChecker(self.si, self.collision_free)
+        self.si.setStateValidityChecker(self.svc)
         self.si.setup()
         # problem definition
         self.pdef = ob.ProblemDefinition(self.si)
@@ -44,8 +53,8 @@ class MotionPlanner:
         assert len(start) == robot.n_arm_dofs, "Start configuration does not match DoF"
         assert len(goal) == robot.n_arm_dofs, "Goal configuration does not match DoF"
         
-        self.start = ob.State(self.space)
-        self.goal = ob.State(self.space)
+        self.start = self.space.allocState()
+        self.goal = self.space.allocState()
 
         for i in range(robot.n_arm_dofs):
             self.start[i] = start[i]
@@ -74,8 +83,8 @@ class MotionPlanner:
 
 
     def _validate_states(self, plant_name):
-        start_valid = self.si.isValid(self.start())
-        goal_valid = self.si.isValid(self.goal())
+        start_valid = self.si.isValid(self.start)
+        goal_valid = self.si.isValid(self.goal)
 
         if not start_valid or not goal_valid:
             if not start_valid: 
