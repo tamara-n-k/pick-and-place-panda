@@ -12,7 +12,7 @@ class PickAndPlace:
         self.grasp_sampler = GraspSampler(self.ik)
         self.approach_margin = 0.3
 
-    def execute_move(self, target_conf, plant_name, linear=False):
+    def execute_move(self, target_conf, plant_name, grasp_SE3=None, linear=False):
         current_q_full = self.env.get_state()
         q_start_arm = current_q_full[:7]
         q_gripper = current_q_full[7:]
@@ -55,7 +55,7 @@ class PickAndPlace:
 
         if len(path_list_7dof) > 0:
             full_path = [np.concatenate((q_arm, q_gripper)) for q_arm in path_list_7dof]
-            Viewer.run_trajectory(self.env, full_path, speed=0.5)
+            Viewer.run_trajectory(self.env, full_path, grasp_SE3, speed=0.5)
             self.env.set_state(full_path[-1])
             return True
         
@@ -72,7 +72,6 @@ class PickAndPlace:
             print(f"No valid grasp found for {plant_name}")
             return False
         print(f"Found valid grasp for {plant_name} at position {grasp_SE3.translation}")
-        self.env.robot.data.mocap_pos[0] = grasp_SE3.translation
         approach_pos = grasp_SE3.translation + np.array([0, 0, 0.15]) 
         approach_SE3 = pin.SE3(grasp_SE3.rotation, approach_pos)
         q_approach = self.ik.solve(current_q[:7], approach_SE3)
@@ -86,14 +85,14 @@ class PickAndPlace:
         # approach
         print(f"--- Picking {plant_name} ---")
         
-        if not self.execute_move(q_approach, plant_name):
+        if not self.execute_move(q_approach, plant_name, grasp_SE3):
             print("Failed to approach plant.")
             return
         print(f"--- Reached approach pose {approach_SE3.translation} for {plant_name} ---")
         
         # descend
         print(f"--- Descending to grasp {plant_name} ---")
-        if not self.execute_move(q_grasp, plant_name, True):
+        if not self.execute_move(q_grasp, plant_name, grasp_SE3, True):
             print("Failed to descend to grasp plant.")
             return
 
@@ -108,6 +107,6 @@ class PickAndPlace:
         # lift
         q_lift = self.ik.solve(q_init=q_grasp, target_SE3=approach_SE3)
         print(f"--- Lifting {plant_name} ---")
-        if not self.execute_move(q_lift, plant_name):
+        if not self.execute_move(q_lift, plant_name, grasp_SE3):
             print("Failed to lift plant.")
             return
