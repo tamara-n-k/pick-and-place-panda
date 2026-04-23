@@ -9,7 +9,7 @@ class PickAndPlace:
         self.env = env
         self.planner = planner
         self.ik = ik_solver
-        self.grasp_sampler = GraspSampler(self.env, self.ik, self.planner)
+        self.grasp_sampler = GraspSampler(self.ik)
         self.approach_margin = 0.3
 
     def execute_move(self, target_conf, plant_name, linear=False):
@@ -62,59 +62,12 @@ class PickAndPlace:
         print(f"No valid path found for target position: {target_conf}")
         return False
 
-    def pick_plant(self, plant_name):
-        current_q = self.env.get_state()
-        print(f"--- Sampling valid grasp for {plant_name} ---")
-        q_grasp, grasp_SE3 = self.grasp_sampler.get_valid_grasp(plant_name, current_q[:7])
-        if q_grasp is None:
-            print(f"No valid grasp found for {plant_name}")
-            return False
-        print(f"Found valid grasp for {plant_name} at position {grasp_SE3.translation}")
-        self.env.robot.data.mocap_pos[0] = grasp_SE3.translation
-        approach_SE3 = grasp_SE3.copy()
-        approach_SE3.translation -= grasp_SE3.rotation @ np.array([0, 0, 0.2]) # approach from above
-        q_approach = self.ik.solve(current_q[:7], approach_SE3)
-        # open gripper
-        if not self.env.robot.set_gripper_ctrl(width=0.08):
-            print("Failed to open gripper.")
-            return
-        for _ in range(50):
-            self.env.step()
-        
-        # approach
-        print(f"--- Picking {plant_name} ---")
-        
-        if not self.execute_move(q_approach, plant_name):
-            print("Failed to approach plant.")
-            return
-        print(f"--- Reached approach pose {approach_SE3.translation} for {plant_name} ---")
-        
-        # descend
-        print(f"--- Descending to grasp {plant_name} ---")
-        if not self.execute_move(q_grasp, plant_name, True):
-            print("Failed to descend to grasp plant.")
-            return
-
-        # close Gripper
-        print(f"--- Grasping {plant_name} ---")
-        if not self.env.robot.set_gripper_ctrl(width=0.0):
-            print("Failed to close gripper.")
-            return
-        for _ in range(50):
-            self.env.step()
-
-        # lift
-        q_lift = self.ik.solve(q_init=q_grasp, target_SE3=approach_SE3)
-        print(f"--- Lifting {plant_name} ---")
-        if not self.execute_move(q_lift, plant_name):
-            print("Failed to lift plant.")
-            return
 
 
     def pick_plant(self, plant_name):
         current_q = self.env.get_state()
         print(f"--- Sampling valid grasp for {plant_name} ---")
-        q_grasp, grasp_SE3 = self.grasp_sampler.get_valid_grasp(plant_name, current_q[:7])
+        q_grasp, grasp_SE3 = self.grasp_sampler.find_valid_grasp(plant_pos=self.env.get_body_pos(plant_name))
         if q_grasp is None:
             print(f"No valid grasp found for {plant_name}")
             return False

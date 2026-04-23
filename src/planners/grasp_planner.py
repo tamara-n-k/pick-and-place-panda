@@ -1,37 +1,68 @@
 import numpy as np
 import pinocchio as pin
 
+from utils.ik_solver import IKSolver
+
 class GraspSampler:
-    def __init__(self, env, ik_solver, motion_planner):
-        self.env = env
-        self.robot = env.robot
-        self.ik = ik_solver
-        self.planner = motion_planner
+    def __init__(self, solver: IKSolver):
+        self.solver = solver
+        # create standard seed for IK with elbow up
+        self.default_seed = np.array([0, -0.785, 0, -2.356, 0, 1.571, 0.785])
 
-
-    def get_valid_grasp(self, body_name, q_start, num_samples=16):
-        plant_world_pos = self.env.get_body_pos(body_name) # get world position of the plant
-        grasp_pos = plant_world_pos + np.array([0, 0, 0.02])
-        tilts = [np.pi/6, np.pi/4, np.pi/3] # 30, 45, 60 degrees
-        yaws = np.linspace(0, 2 * np.pi, num_samples)
-        valid_grasps = []
-        for tilt in tilts:
-            for angle in yaws:
-                target_SE3 = pin.SE3.Identity()
-                target_SE3.translation = grasp_pos
+    def _create_target_se3(self, pos, approach_dir, roll):
+        pos = np.array(pos, dtype=np.float64).flatten()
+        
+        # z_axis pointing at plant
+        z_axis = approach_dir / np.linalg.norm(approach_dir)
+        
+        # use cross product to find x axis perpendicular to world up and approach direction
+        world_up = np.array([0, 0, 1], dtype=np.float64)
+        x_axis = np.cross(world_up, z_axis)
+        
+        # perfectly vertical approach will cause cross product to be zero
+        if np.linalg.norm(x_axis) < 1e-4:
+            x_axis = np.array([1, 0, 0], dtype=np.float64)
+        else:
+            x_axis /= np.linalg.norm(x_axis)
             
-                R_base = pin.utils.rotate('x', np.pi) # base rotation to face downwards
-                R_tilt = pin.utils.rotate('y', tilt) # tilt rotation
-                R_yaw = pin.utils.rotate('z', angle) # yaw rotation around vertical axis
-                target_SE3.rotation = R_yaw @ R_tilt @ R_base
+        y_axis = np.cross(z_axis, x_axis)
+        
+        # rotation matrix with z-axis pointing at plant
+        R = np.column_stack((x_axis, y_axis, z_axis))
+        
+        # Apply roll around 
+        R_final = R @ pin.exp3(np.array([0, 0, 1]) * roll)
+        
+        return pin.SE3(R_final.astype(np.float64), pos)
 
-                q_goal = self.ik.solve(q_start, target_SE3)
-                if q_goal is not None and self.planner.collision_free(q_goal):
-                    score = np.linalg.norm(q_goal - q_start)
-                    valid_grasps.append((score, q_goal, target_SE3))
+    def find_valid_grasp(self, plant_pos):
+        """
+        finds a  valid grasp configuration:
+        tilt: how much the arm leans in
+        azimuth: where the arm stands around the plant (front, left, back, right)
+        roll: how the fingers are rotated around the approach axis
 
-        if not valid_grasps:
-            return None, None
+        """
+        # 0 is vertical
+        tilts = [0.0, 0.3, 0.6, 0.9] 
+        azimuths = np.linspace(0, 2 * np.pi, 8) 
+        rolls = [0, np.pi/4, -np.pi/4]
 
-        valid_grasps.sort(key=lambda x: x[0])
-        return valid_grasps[0][1], valid_grasps[0][2]
+        for tilt in tilts:
+            for az in azimuths:
+                # convert tilt and azimuth to 3D vector that points from gripper to plant
+                direction = np.array([
+                    np.sin(tilt) * np.cos(az),
+                    np.sin(tilt) * np.sin(az),
+                    -np.cos(tilt)
+                ])
+
+                for roll in rolls:
+                    # build the target SE3 with gripper2plant direction and roll
+                    target_se3 = self._create_target_se3(plant_pos, direction, roll)
+                    
+                    q_sol = self.solver.solve(self.default_seed, target_se3)
+                    
+                    if q_sol is not None:
+                        return q_sol, target_se3
+        return None, None
