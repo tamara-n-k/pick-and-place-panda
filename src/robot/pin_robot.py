@@ -18,6 +18,7 @@ class PinRobot:
         
         self.data = self.model.createData()
         self.geom_data = pin.GeometryData(self.geom_model)
+        self.tcp_offset = pin.SE3(np.eye(3), np.array([0, 0, 0.103]))
         
     def update_state(self, q):
         q = np.array(q)
@@ -34,11 +35,13 @@ class PinRobot:
         pin.updateFramePlacement(self.model, self.data, self.ee_frame_id)
         if update_geom:
             pin.updateGeometryPlacements(self.model, self.data, self.geom_model, self.geom_data)
-        return self.data.oMf[self.ee_frame_id] # pin.SE3 format
+        hand_pose = self.data.oMf[self.ee_frame_id]
+        tcp_pose = hand_pose * self.tcp_offset
+        return tcp_pose
     
     def frame_error(self, q, target_SE3):
-        current = self.forward_kinematics(q)
-        return pin.log(current.inverse() * target_SE3).vector
+        current_tcp = self.forward_kinematics(q)
+        return pin.log(current_tcp.inverse() * target_SE3).vector
     
     def check_collisions(self, q):
         # Standard FK update
