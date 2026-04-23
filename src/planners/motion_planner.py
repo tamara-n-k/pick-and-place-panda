@@ -31,7 +31,8 @@ class MotionPlanner:
         # problem definition
         self.pdef = ob.ProblemDefinition(self.si)
 
-        self.planner = og.RRTstar(self.si) 
+        self.pdef.setOptimizationObjective(ob.PathLengthOptimizationObjective(self.si))
+        self.planner = og.RRTConnect(self.si)
         self.planner.setRange(0.2) # Step size
         self.planner.setProblemDefinition(self.pdef)
         self.planner.setup()
