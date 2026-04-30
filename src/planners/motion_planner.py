@@ -18,6 +18,7 @@ class MotionPlanner:
     def __init__(self, environment):
         self.env = environment
         robot = self.env.robot
+        self.planner_data = mujoco.MjData(self.env.robot.model) # create a separate data instance for collision checking to avoid affecting the main simulation data and viewer
 
         self.bounds = ob.RealVectorBounds(robot.n_arm_dofs)#robot's limits
         self.space = ob.RealVectorStateSpace(robot.n_arm_dofs)#configuration space
@@ -61,14 +62,23 @@ class MotionPlanner:
             self.start[i] = start[i]
             self.goal[i] = goal[i]
 
-        #collision detection
-    def collision_free(self, state):
-        robot = self.env.robot
-        for i in range(robot.n_arm_dofs):
-            robot.data.qpos[i] = state[i]
 
-        mujoco.mj_forward(robot.model, robot.data)
-        return robot.data.ncon <=2  # allow up to 2 contacts (gripper touching the plant)
+    def collision_free(self, state):
+        d = self.planner_data
+        m = self.env.robot.model
+        for i in range(7):
+            d.qpos[i] = state[i]
+        mujoco.mj_forward(m, d) # run forward kinematics without affecting viewer
+        for i in range(d.ncon):
+            con = d.contact[i]
+            geom1_name = m.geom(con.geom1).name or ""
+            geom2_name = m.geom(con.geom2).name or ""
+
+            forbidden_contacts = ["table", "tray", "plant"] # any contact involving these is a collision
+            
+            if any(obs in geom1_name or obs in geom2_name for obs in forbidden_contacts):
+                return False
+        return True
 
     def set_collision_mask(self, body_name, ignore=True):
         collision_name = f"{body_name}_cube"
@@ -88,18 +98,15 @@ class MotionPlanner:
         goal_valid = self.si.isValid(self.goal)
 
         if not start_valid or not goal_valid:
-            if not start_valid: 
-                print("CRITICAL: Start state in collision!")
-            if not goal_valid: 
-                print("CRITICAL: Goal state in collision!")
-                mujoco.mj_forward(self.env.robot.model, self.env.robot.data)
+            d = self.planner_data 
+            m = self.env.robot.model
+            print(f"CRITICAL: {'Start' if not start_valid else 'Goal'} state in collision!")
+            for i in range(d.ncon):
+                con = d.contact[i]
+                g1 = m.geom(con.geom1).name or "unknown"
+                g2 = m.geom(con.geom2).name or "unknown"
+                print(f" CONTACT: {g1} <--> {g2}")
                 
-                print(f"Number of contacts: {self.env.robot.data.ncon}")
-                for i in range(self.env.robot.data.ncon):
-                    con = self.env.robot.data.contact[i]
-                    geom1 = self.env.robot.model.geom(con.geom1).name
-                    geom2 = self.env.robot.model.geom(con.geom2).name
-                    print(f" CONTACT DETECTED: {geom1} <--> {geom2}")
             return False
         return True
     
