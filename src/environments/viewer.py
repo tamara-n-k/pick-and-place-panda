@@ -9,7 +9,7 @@ class Viewer:
     executes the mujoco simulator
     """
     @staticmethod
-    def run_trajectory(env, trajectory, grasp_SE3=None, speed = 1.0, show_col_obj=False, record=True, show_trajectory=True):
+    def run_trajectory(env, trajectory, grasp_SE3=None, speed = 1.0, show_col_obj=False, record=True, show_trajectory=False, show_planning_tcp=False, show_goal_pos=False):
         viewer_handle = env.mj_viewer
         if not viewer_handle or not viewer_handle.is_running():
             print("Viewer is not running. Cannot execute trajectory.")
@@ -31,16 +31,16 @@ class Viewer:
             env.set_state(state)
             try:
                 tcp_pose = env.pin.forward_kinematics(state[:7])
-                
-                # Get the mocap ID for the visual target
-                mocap_id = env.robot.model.body('tcp_target').mocapid[0]
-                env.robot.data.mocap_pos[mocap_id] = tcp_pose.translation
-                env.robot.data.mocap_quat[mocap_id] = pin.SE3ToXYZQUAT(tcp_pose)[3:]
-
-                if grasp_SE3 is not None:
-                    goal_id = env.robot.model.body('grasp_goal').mocapid[0]
-                    env.robot.data.mocap_pos[goal_id] = grasp_SE3.translation
-                    env.robot.data.mocap_quat[goal_id] = pin.SE3ToXYZQUAT(grasp_SE3)[3:]
+                if show_planning_tcp:
+                    # Get the mocap ID for the visual target
+                    mocap_id = env.robot.model.body('tcp_target').mocapid[0]
+                    env.robot.data.mocap_pos[mocap_id] = tcp_pose.translation
+                    env.robot.data.mocap_quat[mocap_id] = pin.SE3ToXYZQUAT(tcp_pose)[3:]
+                if show_goal_pos:
+                    if grasp_SE3 is not None:
+                        goal_id = env.robot.model.body('grasp_goal').mocapid[0]
+                        env.robot.data.mocap_pos[goal_id] = grasp_SE3.translation
+                        env.robot.data.mocap_quat[goal_id] = pin.SE3ToXYZQUAT(grasp_SE3)[3:]
             except Exception as e:
                 pass
 
