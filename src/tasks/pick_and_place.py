@@ -9,14 +9,15 @@ class PickAndPlace:
         self.env = env
         self.planner = planner
         self.ik = ik_solver
-        self.grasp_sampler = GraspSampler(self.ik)
+        self.grasp_sampler = GraspSampler(self.env, self.ik, self.planner)
         self.approach_margin = 0.3
 
     def execute_move(self, target_conf, plant_name, grasp_SE3=None, linear=False):
         current_q_full = self.env.get_state()
         q_start_arm = current_q_full[:7]
         q_gripper = current_q_full[7:]
-
+        if not self.planner.collision_free(current_q_full):
+            print("CRITICAL: RRT cannot start because the CURRENT robot position is in collision!")
         if isinstance(target_conf, np.ndarray) and target_conf.shape == (3,):
             target_SE3 = pin.SE3.Identity()
             target_SE3.translation = target_conf.astype(np.float64).flatten()

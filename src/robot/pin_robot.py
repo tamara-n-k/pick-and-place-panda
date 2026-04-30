@@ -43,7 +43,7 @@ class PinRobot:
         current_tcp = self.forward_kinematics(q)
         return pin.log(current_tcp.inverse() * target_SE3).vector
     
-    def check_collisions(self, q):
+    def check_collisions(self, q):# internal map using the kinematic model
         # Standard FK update
         pin.forwardKinematics(self.model, self.data, q)
         # Sync geometry shapes to the joints
