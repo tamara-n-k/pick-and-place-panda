@@ -113,14 +113,13 @@ class MotionPlanner:
 
     def find_path_rrt(self, start = None, goal = None, plant_name=None):
         #ompl planning
+        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
         if start is not None and goal is not None:
             self.define_start_goal_positions(start, goal)
         elif self.start is None or self.goal is None:
             raise ValueError("Start and goal states must be defined")
-        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
 
         if not self._validate_states(plant_name):
-            self.set_collision_mask(plant_name, ignore=False)
             return None
             
         # Clear OMPL's internal state before planning
@@ -150,14 +149,13 @@ class MotionPlanner:
         
         
     def find_linear_path(self, q_start, q_goal, plant_name, path_list):
+        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
         if q_start is not None and q_goal is not None:
             self.define_start_goal_positions(q_start, q_goal)
         elif self.start is None or self.goal is None:
             raise ValueError("Start and goal states must be defined")
-        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
 
         if not self._validate_states(plant_name):
-            self.set_collision_mask(plant_name, ignore=False)
             return None
         
         steps = 100

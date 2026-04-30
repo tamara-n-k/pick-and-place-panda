@@ -40,7 +40,7 @@ class GraspSampler:
 
 
     def _create_target_se3(self, pos, approach_dir, roll):
-        offset = 0.10 
+        offset = 0.0
         pos = np.array(pos, dtype=np.float64).flatten()
         safe_pos = pos - (approach_dir * offset)
         
@@ -87,9 +87,13 @@ class GraspSampler:
                     q_sol = self.solver.solve(self.default_seed, target_se3)
                     
                     if q_sol is not None:
-                        if not self.planner.collision_free(q_sol):
-                            continue
-
+                        # mask the box so the fingers don't collide with it
+                        self.planner.set_collision_mask("plant_5", ignore=True)
+                        is_safe = self.planner.collision_free(q_sol)
+                        # unmask the box for future checks
+                        self.planner.set_collision_mask("plant_5", ignore=False)
+                        if is_safe:
+                            candidates.append({'q': q_sol, 'pose': target_se3, 'score': 0.0}) # score will be calculated later
                         # Calculate metrics
                         clearance = self._calculate_clearance()
                         joint_penalty = self._calculate_joint_penalty(q_sol)

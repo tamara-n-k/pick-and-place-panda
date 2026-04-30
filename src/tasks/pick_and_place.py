@@ -10,7 +10,7 @@ class PickAndPlace:
         self.planner = planner
         self.ik = ik_solver
         self.grasp_sampler = GraspSampler(self.env, self.ik, self.planner)
-        self.approach_margin = 0.3
+        self.approach_margin = 0.1
 
     def execute_move(self, target_conf, plant_name, grasp_SE3=None, linear=False):
         current_q_full = self.env.get_state()
