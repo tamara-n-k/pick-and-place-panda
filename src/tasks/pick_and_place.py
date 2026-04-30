@@ -68,7 +68,7 @@ class PickAndPlace:
     def pick_plant(self, plant_name):
         current_q = self.env.get_state()
         print(f"--- Sampling valid grasp for {plant_name} ---")
-        q_grasp, grasp_SE3 = self.grasp_sampler.find_valid_grasp(plant_pos=self.env.get_body_pos(plant_name))
+        q_grasp, grasp_SE3 = self.grasp_sampler.find_valid_grasp(plant_pos=self.env.get_body_pos(plant_name), plant_name=plant_name)
         if q_grasp is None:
             print(f"No valid grasp found for {plant_name}")
             return False

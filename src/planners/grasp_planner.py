@@ -48,16 +48,14 @@ class GraspSampler:
         z_axis = approach_dir / np.linalg.norm(approach_dir)
         
         # use cross product to find x axis perpendicular to world up and approach direction
-        world_up = np.array([0, 0, 1], dtype=np.float64)
-        x_axis = np.cross(world_up, z_axis)
+        world_x = np.array([1, 0, 0], dtype=np.float64)
         
-        # perfectly vertical approach will cause cross product to be zero
-        if np.linalg.norm(x_axis) < 1e-4:
-            x_axis = np.array([1, 0, 0], dtype=np.float64)
-        else:
-            x_axis /= np.linalg.norm(x_axis)
-            
-        y_axis = np.cross(z_axis, x_axis)
+        if abs(np.dot(z_axis, world_x)) > 0.99: # if approach is almost parallel to world x, use world y as reference
+            world_x = np.array([0, 1, 0], dtype=np.float64)
+
+        y_axis = np.cross(z_axis, world_x)
+        y_axis /= np.linalg.norm(y_axis)
+        x_axis = np.cross(y_axis, z_axis)
         
         # rotation matrix with z-axis pointing at plant
         R = np.column_stack((x_axis, y_axis, z_axis))
@@ -68,11 +66,11 @@ class GraspSampler:
         return pin.SE3(R_final.astype(np.float64), safe_pos)
 
 
-    def find_valid_grasp(self, plant_pos):
+    def find_valid_grasp(self, plant_pos, plant_name):
         candidates = []
         tilts = [0.0, 0.3, 0.6] 
         azimuths = np.linspace(0, 2 * np.pi, 8) 
-        rolls = [0, np.pi/4, -np.pi/4]
+        rolls = np.linspace(-np.pi/2, np.pi/2, 5)
 
         for tilt in tilts:
             for az in azimuths:
@@ -88,18 +86,25 @@ class GraspSampler:
                     
                     if q_sol is not None:
                         # mask the box so the fingers don't collide with it
-                        self.planner.set_collision_mask("plant_5", ignore=True)
+                        self.planner.set_collision_mask(plant_name, ignore=True)
                         is_safe = self.planner.collision_free(q_sol)
                         # unmask the box for future checks
-                        self.planner.set_collision_mask("plant_5", ignore=False)
+                        self.planner.set_collision_mask(plant_name, ignore=False)
                         if is_safe:
                             candidates.append({'q': q_sol, 'pose': target_se3, 'score': 0.0}) # score will be calculated later
                         # Calculate metrics
                         clearance = self._calculate_clearance()
                         joint_penalty = self._calculate_joint_penalty(q_sol)
                         
-                        # Score: maximize clearance, minimize joint distance, favor top-down (low tilt)
-                        score = (clearance * 10.0) - (joint_penalty * 1.0) - (tilt * 2.0)
+                        gripper_x = target_se3.rotation[:, 0]
+
+                        score_x = abs(np.dot(gripper_x, [1, 0, 0]))
+                        score_y = abs(np.dot(gripper_x, [0, 1, 0]))
+
+                        # prefers grasps that are aligned with body axis
+                        alignment_bonus = max(score_x, score_y)
+
+                        score = (clearance * 10.0) + (alignment_bonus * 5.0) - (joint_penalty * 2.0) - (tilt * 2.0)
                         
                         candidates.append({'q': q_sol, 'pose': target_se3, 'score': score})
 
