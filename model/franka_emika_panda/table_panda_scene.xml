@@ -16,7 +16,7 @@
      <default class="vention">
          <geom conaffinity="0" contype="0" group="1"/>
          <default class="vention_collision">
-             <geom conaffinity="1" condim="3" contype="0" group="4" margin="0.001" rgba=".4 .5 .6 1"/>
+             <geom conaffinity="1" condim="3" contype="1" group="4" margin="0.001" rgba=".4 .5 .6 1"/>
          </default>
      </default>
      <default class="panda">
@@ -344,8 +344,28 @@
       <geom name="tray_place_down_collision" type="box" size="0.1 0.1 0.02" rgba="0 0 0 0" contype="1" conaffinity="1" group="3"/>
     </body>
 
+  <!-- plants -->
 
+  <body name="plant_5" pos="0.0 0.0 1.2">
+      <joint type="free" name="plant_5_free"/>
+      <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      
+      <geom name="plant_5_cube" type="box" size="0.0225 0.0225 0.0225" rgba="0.6 0.3 0.1 1" solimp="0.998 0.998 0.001" 
+              solref="0.001 1" 
+              density="100" 
+            contype="1" conaffinity="1"/>
+  </body>
 
+  <!-- mocap objects -->
+  <body name="grasp_goal" mocap="true">
+    <geom name="grasp_goal_geom" type="sphere" size="0.03" rgba="1 0 0 0.5" contype="0" conaffinity="0"/>
+  </body>
+  
+
+    <body name="tcp_target" mocap="true">
+        <geom type="sphere" size="0.01" rgba="0 1 0 0.5" contype="0" conaffinity="0"/>
+    </body>
+    
   </worldbody>
 
   <tendon>
