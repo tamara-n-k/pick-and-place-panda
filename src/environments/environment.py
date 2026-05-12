@@ -17,6 +17,9 @@ class Environment:
         self.pin = PinRobot(urdf_path, mesh_dir)
         self.mj_viewer = mujoco.viewer.launch_passive(self.robot.model, self.robot.data) # passive viewer for visualization
         self.set_state(np.array([0, -0.785, 0, -2.356, 0, 1.571, 0.785]))
+        self.robot_base_pos = self.robot.data.body('link0').xpos.copy()
+        print(f"Robot base position: {self.robot_base_pos}")
+        self.robot_base_mat = self.robot.data.body('link0').xmat.reshape(3, 3).copy()
 
     def step(self):
         mujoco.mj_step(self.robot.model, self.robot.data)
@@ -43,4 +46,10 @@ class Environment:
         return np.copy(self.pin.q)
 
     def get_body_pos(self, body_name):
-        return self.robot.data.body(body_name).xpos.copy()
+        world_pos = self.robot.data.body(body_name).xpos
+        # 1. Translate
+        centered_pos = world_pos - self.robot_base_pos
+        # 2. Rotate into the robot's frame using the transpose (inverse) of base matrix
+        relative_pos = self.robot_base_mat.T @ centered_pos
+        print(f"World position of {body_name}: {world_pos}, Relative position: {relative_pos}")
+        return relative_pos
