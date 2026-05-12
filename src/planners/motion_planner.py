@@ -41,6 +41,7 @@ class MotionPlanner:
         self.start = None
         self.goal = None
 
+
     def set_bounds(self, lower_limits, upper_limits):
         for i, low in enumerate(lower_limits):
             self.bounds.setLow(i, low)
@@ -49,6 +50,7 @@ class MotionPlanner:
             self.bounds.setHigh(i, high)
 
         self.space.setBounds(self.bounds)
+
 
     def define_start_goal_positions(self, start, goal):
         robot = self.env.robot
@@ -80,17 +82,26 @@ class MotionPlanner:
                 return False
         return True
 
-    def set_collision_mask(self, body_name, ignore=True):
-        collision_name = f"{body_name}_cube"
-        geom_object = self.env.robot.model.geom(collision_name)
-        target_geom_id = geom_object.id
-        if ignore:
-            self.env.robot.model.geom_contype[target_geom_id] = 0
-            self.env.robot.model.geom_conaffinity[target_geom_id] = 0
-            self.env.robot.model.geom_contype[self.env.robot.model.geom("hand_capsule").id] = 0
-        else:
-            self.env.robot.model.geom_contype[target_geom_id] = 2
-            self.env.robot.model.geom_conaffinity[target_geom_id] = 2
+
+    def set_collision_mask(self, target_body_name, ignore=True):
+        robot_part_names = ["hand", "left_finger", "right_finger"]
+        try:
+            target_body_id = self.env.robot.model.body(target_body_name).id
+        except:
+            target_body_id = self.env.robot.model.geom(target_body_name).bodyid
+
+        for i in range(self.env.robot.model.ngeom):
+            geom_name = self.env.robot.model.geom(i).name
+            body_id = self.env.robot.model.geom(i).bodyid
+            body_name = self.env.robot.model.body(body_id).name
+
+            if any(part in body_name for part in robot_part_names) or body_id == target_body_id:
+                if ignore:
+                    self.env.robot.model.geom_contype[i] = 0
+                    self.env.robot.model.geom_conaffinity[i] = 0
+                else:
+                    self.env.robot.model.geom_contype[i] = 1
+                    self.env.robot.model.geom_conaffinity[i] = 1
 
 
     def _validate_states(self, plant_name):

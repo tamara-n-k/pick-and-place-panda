@@ -319,8 +319,8 @@
             </body>
           </body>
         </body>
-        <geom type="box" size="0.612 0.409 0.023"  pos="0 0 0.801" material="vention_black"/>
-        <!-- <geom type="box" size="0.55 0.35 0.001" pos="0.0 0.025 0.825" material="vention_white"/> -->
+        <geom type="box" size="0.612 0.409 0.023"  pos="0 0 0.801" material="vention_black" />
+        <geom type="box" size="0.55 0.35 0.001" pos="0.0 0.025 0.825" material="vention_white"/>
         <geom type="box" size="0.2 0.1 0.023"  pos="0 -0.513 0.801" material="vention_black"/>
         <geom type="box" size="0.202 0.102 0.023" pos="0 -0.513 0.790" material="vention_blue"/>
         <geom type="box" size="0.023 0.15 0.023" pos="0 -0.48 0.676" quat="0.9239 -0.3827 0 0" material="vention_blue"/>
@@ -331,7 +331,7 @@
         <geom type="box" size="0.604 0.401 0.023" pos="0 0 0.124" material="vention_blue"/>
 
         <!-- collision -->
-        <geom type="box" size="0.604 0.401 0.411" pos="0 0 0.413" class="vention_collision"/>
+        <geom type="box" size="0.604 0.401 0.001" pos="0 0 0.825" class="vention_collision"/>
 
     </body>
 
@@ -346,11 +346,12 @@
 
   <!-- plants -->
 
-  <body name="plant_5" pos="0.0 0.0 1.2">
+  <body name="plant_5" pos="0.0 0.0 0.9">
       <joint type="free" name="plant_5_free"/>
-      <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      <inertial pos="0 0 0" mass="0.2" diaginertia="0.0001 0.0001 0.0001"/>
       
-      <geom name="plant_5_cube" type="box" size="0.0225 0.0225 0.0225" rgba="0.6 0.3 0.1 1" solimp="0.998 0.998 0.001" 
+      <geom name="plant_5_cube" type="box" size="0.0225 0.0225 0.0225" rgba="0.6 0.3 0.1 1" 
+              solimp="0.998 0.998 0.001" 
               solref="0.001 1" 
               density="100" 
             contype="1" conaffinity="1"/>
