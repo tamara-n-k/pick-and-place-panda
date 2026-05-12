@@ -1,5 +1,7 @@
+import mujoco
 import numpy as np
 import pinocchio as pin
+import time
 
 from environments.viewer import Viewer
 from planners.grasp_planner import GraspSampler
@@ -11,6 +13,7 @@ class PickAndPlace:
         self.ik = ik_solver
         self.grasp_sampler = GraspSampler(self.env, self.ik, self.planner)
         self.approach_margin = 0.1
+
 
     def execute_move(self, target_conf, plant_name, grasp_SE3=None, linear=False):
         current_q_full = self.env.get_state()
@@ -32,6 +35,9 @@ class PickAndPlace:
         
         path_list_7dof = []
 
+        # turn mask on before planning
+        self.planner.set_collision_mask(plant_name, ignore=True)
+
         if linear:
             print(f"Executing linear move to {q_goal_arm}")
             path_arm = self.planner.find_linear_path(q_start_arm, q_goal_arm, plant_name, path_list_7dof)
@@ -44,7 +50,6 @@ class PickAndPlace:
             if path_arm is None:
                 print(f"RRT Planning failed for target position: {target_conf}")
                 return False
-        
             pdef = self.planner.pdef
 
             if pdef.hasExactSolution():
@@ -53,11 +58,20 @@ class PickAndPlace:
                 for i in range(len(ompl_states)):
                     state_7dof = np.array([ompl_states[i][j] for j in range(7)]) # extract only the arm joints
                     path_list_7dof.append(state_7dof)
+                    
+        # turn mask off immendiately after planning so we can execute the trajectory with correct collision checking
+        self.planner.set_collision_mask(plant_name, ignore=False)
 
         if len(path_list_7dof) > 0:
             full_path = [np.concatenate((q_arm, q_gripper)) for q_arm in path_list_7dof]
-            Viewer.run_trajectory(self.env, full_path, grasp_SE3, speed=0.5)
             self.env.set_state(full_path[-1])
+            for q in full_path:
+                self.env.set_state(q)
+                self.env.step()
+                if self.env.mj_viewer.is_running():
+                    time.sleep(0.01) # slow down the execution for visualization
+                    self.env.mj_viewer.sync()
+
             return True
         
         print(f"No valid path found for target position: {target_conf}")
@@ -77,7 +91,7 @@ class PickAndPlace:
         approach_SE3 = pin.SE3(grasp_SE3.rotation, approach_pos)
         q_approach = self.ik.solve(current_q[:7], approach_SE3)
         # open gripper
-        if not self.env.robot.set_gripper_ctrl(width=0.08):
+        if not self.env.robot.set_gripper_ctrl(width=0.04):
             print("Failed to open gripper.")
             return
         for _ in range(50):
@@ -102,7 +116,7 @@ class PickAndPlace:
         if not self.env.robot.set_gripper_ctrl(width=0.0):
             print("Failed to close gripper.")
             return
-        for _ in range(50):
+        for _ in range(100):
             self.env.step()
 
         # lift
