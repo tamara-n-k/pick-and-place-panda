@@ -104,7 +104,7 @@ class GraspSampler:
                         # prefers grasps that are aligned with body axis
                         alignment_bonus = max(score_x, score_y)
 
-                        score = (clearance * 10.0) + (alignment_bonus * 5.0) - (joint_penalty * 2.0) - (tilt * 2.0)
+                        score = (clearance * 50.0) + (alignment_bonus * 5.0) - (joint_penalty * 2.0) - (tilt * 10.0)
                         
                         candidates.append({'q': q_sol, 'pose': target_se3, 'score': score})
 
