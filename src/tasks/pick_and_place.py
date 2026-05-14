@@ -119,6 +119,12 @@ class PickAndPlace:
         for _ in range(100):
             self.env.step()
 
+        weld_id = mujoco.mj_name2id(self.env.robot.model, mujoco.mjtObj.mjOBJ_EQUALITY, "plant_attachment")
+        # activate the weld constraint to attach the plant to the gripper
+        self.env.robot.data.eq_active[weld_id] = 1
+        print(f"Successfully grasped {plant_name}!")
+        # set the weld distance to 0 to ensure the plant follows the gripper perfectly
+        self.env.robot.model.eq_data[weld_id, :7] = 0
         # lift
         q_lift = self.ik.solve(q_init=q_grasp, target_SE3=approach_SE3)
         print(f"--- Lifting {plant_name} ---")
