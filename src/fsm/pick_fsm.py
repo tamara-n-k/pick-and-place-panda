@@ -75,13 +75,16 @@ class PickStateMachine:
             print("FSM: Closing jaws...")
             self.env.robot.set_gripper_ctrl(width=0.0)
             
-            # Wait for gripper to stall or reach target position
-            stalled = False
             for _ in range(200):
+                current_gripper_q = self.env.get_state()[7:]
+                anchor_state = np.concatenate((self.q_grasp[:7], current_gripper_q))
+                
+                # Lock the arm position while the gripper is closing
+                self.env.set_state(anchor_state)
                 self.env.step()
-                if self.is_gripper_stalled():
-                    stalled = True
-                    break
+                
+                if self.env.mj_viewer.is_running():
+                    self.env.mj_viewer.sync()
             
             if self.check_grasp():
                 print("FSM: Grasp contact validated visually and physically.")
@@ -132,5 +135,6 @@ class PickStateMachine:
                 touch_f1 = True
             if (b1 == f2_id and b2 == box_id) or (b1 == box_id and b2 == f2_id):
                 touch_f2 = True
-                
+
+        print(f"Grasp check: Left finger contact: {touch_f1}, Right finger contact: {touch_f2}")
         return touch_f1 and touch_f2
