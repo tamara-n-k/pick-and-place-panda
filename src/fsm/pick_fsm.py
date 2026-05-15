@@ -59,11 +59,7 @@ class PickStateMachine:
 
         # descend linearly onto target
         elif self.state == PickState.DESCEND:
-            print(f"FSM: Descending onto {self.plant_name}...")
-            # Ignore collisions specifically during descent so we clear bounds safely
-            # self.task.planner.set_collision_mask(self.plant_name, ignore=True)
-            # self.task.planner.set_collision_mask("tabletop", ignore=True)
-            
+            print(f"FSM: Descending onto {self.plant_name}...")            
             success = self.task.execute_move(self.q_grasp, self.plant_name, linear=True)
             
             self.task.planner.set_collision_mask(self.plant_name, ignore=False)
@@ -113,10 +109,7 @@ class PickStateMachine:
             else:
                 self.state = PickState.FAILED
 
-    def is_gripper_stalled(self, minimum_frames=40, threshold=1e-4):
-        if self.timer < minimum_frames:
-            return False # Too early to check stall!
-            
+    def is_gripper_stalled(self, threshold=1e-4):
         v1 = self.env.robot.data.joint('finger_joint1').qvel[0]
         v2 = self.env.robot.data.joint('finger_joint2').qvel[0]
         return abs(v1) < threshold and abs(v2) < threshold
