@@ -378,6 +378,7 @@
 
   <equality>
     <joint joint1="finger_joint1" joint2="finger_joint2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
+    <weld name="plant_attachment" body1="hand" body2="plant_5" active="false"/>
   </equality>
 
   <actuator>

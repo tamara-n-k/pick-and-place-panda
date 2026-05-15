@@ -7,7 +7,7 @@ import time
 
 if __name__ == "__main__":
 
-    xml_path = "model/franka_emika_panda/scene_real_floats.xml"
+    xml_path = "model/franka_emika_panda/table_panda_scene.xml"
     urdf_path = "model/franka_emika_panda/panda.urdf"
     mesh_dir = "model/franka_emika_panda/assets"
     
