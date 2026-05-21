@@ -13,6 +13,12 @@ if __name__ == "__main__":
     mesh_dir = "model/franka_emika_panda/assets"
     
     env = Environment(xml_path, urdf_path, mesh_dir)
+    
+    for _ in range(100):
+        env.step()
+        if env.mj_viewer.is_running():
+            env.mj_viewer.sync()
+
     task = PickAndPlace(env, MotionPlanner(env), IKSolver(env.pin))
     plants = ["plant_5"]
 
