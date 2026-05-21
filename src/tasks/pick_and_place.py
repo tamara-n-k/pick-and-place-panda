@@ -56,6 +56,7 @@ class PickAndPlace:
         
         return False
 
+
     def execute_pick_and_place(self, plant_name, tray_name, hole_offset_local):
         current_q = self.env.get_state()
         
@@ -107,20 +108,23 @@ class PickAndPlace:
 
         return q_grasp, q_pick_approach, q_pick_lift
     
+
     def _compute_place_configurations(self, tray_name, hole_offset_local, q_pick_lift):
         print(f"\n--- Calculating place targets for {tray_name} ---")
-        
+        # get world position of place down tray
         tray_world_pos = self.env.robot.data.body(tray_name).xpos
         tray_world_mat = self.env.robot.data.body(tray_name).xmat.reshape(3, 3)
+        # apply hole offset
         hole_world_pos = tray_world_pos + (tray_world_mat @ hole_offset_local)
 
+        # use straight down approach
         straight_down_dir = np.array([0.0, 0.0, -1.0])
         place_world_SE3 = self.grasp_sampler._create_target_se3(
             pos=hole_world_pos, 
             approach_dir=straight_down_dir, 
             roll=0.0
         )
-
+        # get offset from robot base
         centered_pos = place_world_SE3.translation - self.env.robot_base_pos
         hole_relative_pos = self.env.robot_base_mat.T @ centered_pos
         hole_relative_mat = self.env.robot_base_mat.T @ place_world_SE3.rotation
