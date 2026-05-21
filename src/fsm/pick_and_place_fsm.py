@@ -129,9 +129,11 @@ class PickAndPlaceStateMachine:
 
     
     def _handle_welding(self):
-        print("FSM: Securing spatial constraint welding lock...")
-        self.env.robot.data.eq_active[self.weld_id] = 1
-        self.env.robot.model.eq_data[self.weld_id, :7] = 0
+        print(f"FSM: Welder tracking target -> {self.plant_name}")
+        body1_id = mujoco.mj_name2id(self.env.robot.model, mujoco.mjtObj.mjOBJ_BODY, "hand_tcp")
+        body2_id = mujoco.mj_name2id(self.env.robot.model, mujoco.mjtObj.mjOBJ_BODY, self.plant_name)
+        self.env.robot.model.eq_obj1id[self.weld_id] = body1_id
+        self.env.robot.model.eq_obj2id[self.weld_id] = body2_id
         mujoco.mj_forward(self.env.robot.model, self.env.robot.data)
         self.state = TaskState.LIFT_PICK
 
