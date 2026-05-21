@@ -353,17 +353,29 @@
       contype="1" conaffinity="1" group="3"/>
     </body>
 
-
-  <body name="plant_5" pos="0.05 0.15 1.0" >
-      <joint type="free" name="plant_5_free"/>
-      <inertial pos="0 0 0" mass="0.2" diaginertia="0.0001 0.0001 0.0001"/>
-      
-      <geom name="plant_5_cube" type="box" size="0.025 0.025 0.04" rgba="0.6 0.3 0.1 1" 
-              solimp="0.998 0.998 0.001" 
-              solref="0.001 1" 
-              density="100" 
+  <!-- plants -->
+  <body name="plant_4" pos="0.15 0.3 1.0" >
+      <joint type="free" name="plant_4_free"/>
+      <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      <geom name="plant_4_cube" type="box" size="0.025 0.025 0.04" rgba="0.6 0.3 0.1 1" 
+            mass="0.1"
+            condim="3" 
+            friction="1.5 0.005 0.0001"
+            solref="0.01 1" 
+            solimp="0.95 0.99 0.001"
             contype="1" conaffinity="1"/>
-      <site name="object_site" pos="0 0 0.01" quat="1 0 0 0"/>
+  </body>
+
+  <body name="plant_5" pos="0 0 1.0" >
+      <joint type="free" name="plant_5_free"/>
+      <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      <geom name="plant_5_cube" type="box" size="0.025 0.025 0.04" rgba="0.6 0.3 0.1 1" 
+            mass="0.1"
+            condim="3" 
+            friction="1.5 0.005 0.0001" 
+            solref="0.01 1" 
+            solimp="0.95 0.99 0.001"
+            contype="1" conaffinity="1"/>
   </body>
 
   <!-- mocap objects -->
@@ -386,8 +398,7 @@
   </tendon>
 
   <equality>
-    <joint joint1="finger_joint1" joint2="finger_joint2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
-    <weld name="plant_attachment" site1="attachment_site" site2="object_site" solref="0.001 1" solimp="0.9999 0.9999 0.001" active="false"/>
+    <joint joint1="finger_joint1" joint2="finger_joint2" solimp="0.95 0.99 0.001" solref="0.005 1"/>    
   </equality>
 
   <actuator>
