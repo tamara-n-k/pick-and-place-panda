@@ -335,22 +335,29 @@
 
     </body>
 
-  <body name="tray_pick_up" pos="-0.3 0.1 0.82" euler="1.5708 0 0">
-    <geom name="tray_pick_up_mesh" type="mesh" mesh="tray_pick_up" rgba="0.2 0.2 0.2 1" contype="1" conaffinity="1"/>
+    <body name="tray_pick_up" pos="-0.3 0.1 0.82" euler="1.5708 0 0">
+      <geom name="tray_pick_up_mesh" type="mesh" mesh="tray_pick_up" rgba="0.2 0.2 0.2 1" 
+      contype="0" conaffinity="0" group="2"/>
+      
+      <geom name="tray_pick_up_collision" type="box" size="0.12 0.12 0.01" pos="0 0 0" rgba="0 1 0 0" 
+      contype="1" conaffinity="1" group="4"/>
     </body>
+
 
     <body name="tray_place_down" pos="-0.35 -0.5 0.82" euler="1.5708 0 0">
-      <geom name="tray_place_down_mesh" type="mesh" mesh="tray_place_down" rgba="0.2 0.2 0.2 1"/>
-      <geom name="tray_place_down_collision" type="box" size="0.1 0.1 0.02" rgba="0 0 0 0" contype="1" conaffinity="1" group="3"/>
+      <geom name="tray_place_down_mesh" type="mesh" mesh="tray_place_down" rgba="0.2 0.2 0.2 1" 
+      contype="0" conaffinity="0" group="2"/>
+
+      <geom name="tray_place_down_collision" type="box" size="0.1 0.1 0.02" rgba="0 0 0 0" 
+      contype="1" conaffinity="1" group="3"/>
     </body>
 
-  <!-- plants -->
 
-  <body name="plant_5" pos="0.0 0.0 0.9">
+  <body name="plant_5" pos="0.05 0.15 1.0" >
       <joint type="free" name="plant_5_free"/>
       <inertial pos="0 0 0" mass="0.2" diaginertia="0.0001 0.0001 0.0001"/>
       
-      <geom name="plant_5_cube" type="box" size="0.0225 0.0225 0.0225" rgba="0.6 0.3 0.1 1" 
+      <geom name="plant_5_cube" type="box" size="0.025 0.025 0.04" rgba="0.6 0.3 0.1 1" 
               solimp="0.998 0.998 0.001" 
               solref="0.001 1" 
               density="100" 
@@ -378,7 +385,7 @@
 
   <equality>
     <joint joint1="finger_joint1" joint2="finger_joint2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
-    <weld name="plant_attachment" body1="hand" body2="plant_5" active="false"/>
+    <weld name="plant_attachment" body1="left_finger" body2="plant_5" solref="0.001 1" solimp="0.9999 0.9999 0.001" active="false"/>
   </equality>
 
   <actuator>
