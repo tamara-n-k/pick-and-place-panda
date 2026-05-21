@@ -17,6 +17,7 @@ if __name__ == "__main__":
 
     for plant in plants:
         task.pick_plant(plant)
+        task.place_plant()
     
     print("Task completed.")
     try:

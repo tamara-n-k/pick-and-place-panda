@@ -3,7 +3,8 @@ import numpy as np
 import pinocchio as pin
 import time
 from planners.grasp_planner import GraspSampler
-from fsm.pick_fsm import PickStateMachine  # Import our new state engine
+from fsm.pick_fsm import PickStateMachine
+import robot  # Import our new state engine
 
 class PickAndPlace:
     def __init__(self, env, planner, ik_solver):
@@ -67,7 +68,7 @@ class PickAndPlace:
         if q_grasp is None:
             print(f"No valid grasp found for {plant_name}")
             return False
-            
+    
         print(f"Found valid grasp for {plant_name} at position {grasp_SE3.translation}")
         
         # Calculate Approach & Lift Configurations
@@ -84,3 +85,44 @@ class PickAndPlace:
         # Instantiate and delegate tracking to the State Machine
         fsm = PickStateMachine(self, plant_name, q_grasp, q_approach, q_lift)
         return fsm.run()
+    
+    def place_plant(self):
+        tray_name = "tray_place_down"  
+        # coordinate system of tray is rotated: y axis points upwards, x axis points forward, z axis points to the side
+        hole_offset_local = np.array([0.27, 0.2, -0.15])
+        current_q = self.env.get_state()
+
+        # ray's position in world coordinates
+        tray_world_pos = self.env.robot.data.body(tray_name).xpos
+        tray_world_mat = self.env.robot.data.body(tray_name).xmat.reshape(3, 3)
+        hole_world_pos = tray_world_pos + (tray_world_mat @ hole_offset_local)
+
+        # top down pose
+        straight_down_dir = np.array([0.0, 0.0, -1.0])
+        place_world_SE3 = self.grasp_sampler._create_target_se3(
+            pos=hole_world_pos, 
+            approach_dir=straight_down_dir, 
+            roll=0.0
+        )
+
+        centered_pos = place_world_SE3.translation - self.env.robot_base_pos
+        hole_relative_pos = self.env.robot_base_mat.T @ centered_pos
+        
+        hole_relative_mat = self.env.robot_base_mat.T @ place_world_SE3.rotation
+
+        place_base_SE3 = pin.SE3(hole_relative_mat, hole_relative_pos)
+
+        q_place = self.ik.solve(current_q[:7], place_base_SE3)
+        if q_place is None:
+            print("Aborting place: IK configuration is mathematically unresolvable.")
+            return False
+            
+        print(f"Moving to valid place pose over {tray_name} at Base Pos: {hole_relative_pos}")
+        
+        self.planner.set_collision_mask("plant_5", ignore=True)
+        success = self.execute_move(q_place, plant_name="plant_5", linear=False)
+        self.planner.set_collision_mask("plant_5", ignore=False)
+
+        self.env.robot.set_gripper_ctrl(width=0.04)
+        for _ in range(50):
+            self.env.step()
