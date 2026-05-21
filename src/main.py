@@ -2,6 +2,7 @@ from planners.motion_planner import MotionPlanner
 from environments.environment import Environment
 from utils.ik_solver import IKSolver
 from tasks.pick_and_place import PickAndPlace
+import numpy as np
 
 import time
 
@@ -16,8 +17,7 @@ if __name__ == "__main__":
     plants = ["plant_5"]
 
     for plant in plants:
-        task.pick_plant(plant)
-        task.place_plant()
+        task.execute_pick_and_place(plant_name=plant, tray_name="tray_place_down", hole_offset_local=np.array([0.27, 0.2, -0.15]))
     
     print("Task completed.")
     try:
