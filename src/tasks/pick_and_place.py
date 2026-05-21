@@ -3,7 +3,7 @@ import numpy as np
 import pinocchio as pin
 import time
 from planners.grasp_planner import GraspSampler
-from fsm.pick_fsm import PickAndPlaceStateMachine
+from fsm.pick_and_place_fsm import PickAndPlaceStateMachine
 
 class PickAndPlace:
     def __init__(self, env, planner, ik_solver):
