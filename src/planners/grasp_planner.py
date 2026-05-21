@@ -40,7 +40,7 @@ class GraspSampler:
 
 
     def _create_target_se3(self, pos, approach_dir, roll):
-        offset = -0.03
+        offset = 0.03
         pos = np.array(pos, dtype=np.float64).flatten()
         safe_pos = pos - (approach_dir * offset)
         
