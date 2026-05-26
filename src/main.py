@@ -1,3 +1,4 @@
+from environments.viewer import Viewer
 from planners.motion_planner import MotionPlanner
 from environments.environment import Environment
 from utils.ik_solver import IKSolver
@@ -14,11 +15,11 @@ if __name__ == "__main__":
     
     env = Environment(xml_path, urdf_path, mesh_dir)
     
+    Viewer.setup_initial_view(env)
+
     for _ in range(100):
         env.step()
-        if env.mj_viewer.is_running():
-            env.mj_viewer.sync()
-
+    
     task = PickAndPlace(env, MotionPlanner(env), IKSolver(env.pin))
     plants = ["plant_5"]
 

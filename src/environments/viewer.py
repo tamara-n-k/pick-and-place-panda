@@ -9,7 +9,19 @@ class Viewer:
     executes the mujoco simulator
     """
     @staticmethod
-    def run_trajectory(env, trajectory, grasp_SE3=None, speed = 1.0, show_col_obj=False, record=True, show_trajectory=False, show_planning_tcp=False, show_goal_pos=False):
+    def setup_initial_view(env):
+        if env.mj_viewer is not None:
+            with env.mj_viewer.lock():
+                env.mj_viewer.cam.type = 0  # free camera (default)
+                env.mj_viewer.cam.distance = 3.5  
+                env.mj_viewer.cam.lookat[:] = [0.0, 0.0, 0.4]
+                env.mj_viewer.cam.elevation = -30
+                env.mj_viewer.cam.azimuth = 135
+            env.mj_viewer.sync()
+
+
+    @staticmethod
+    def run_trajectory(env, trajectory, grasp_SE3=None, speed = 1.0, show_col_obj=True, record=True, show_trajectory=True, show_planning_tcp=True, show_goal_pos=True):
         viewer_handle = env.mj_viewer
         if not viewer_handle or not viewer_handle.is_running():
             print("Viewer is not running. Cannot execute trajectory.")
