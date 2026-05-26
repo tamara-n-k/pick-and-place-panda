@@ -11,6 +11,8 @@ class MJRobot:
 
     def load_model(self, xml_path):
         self.model = mujoco.MjModel.from_xml_path(xml_path)
+        self.model.opt.timestep = 0.008
+        print(f"timestep: {self.model.opt.timestep}")
         self.data = mujoco.MjData(self.model)
         self.n_arm_dofs = 7
         self.n_gripper_dofs = 2
