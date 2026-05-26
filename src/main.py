@@ -24,7 +24,11 @@ if __name__ == "__main__":
     plants = ["plant_5"]
 
     for plant in plants:
-        task.execute_pick_and_place(plant_name=plant, tray_name="tray_place_down", hole_offset_local=np.array([0.28, 0.1, -0.18]))
+        success =task.execute_pick_and_place(plant_name=plant, tray_name="tray_place_down", hole_offset_local=np.array([0.28, 0.1, -0.18]))
+        if not success:
+            print(f"Task failed for {plant}.")
+        else:
+            print(f"Task succeeded for {plant}.")
     
     print("Task completed.")
     try:
