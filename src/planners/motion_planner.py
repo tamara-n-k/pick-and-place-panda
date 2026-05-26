@@ -160,6 +160,7 @@ class MotionPlanner:
         
         
     def find_linear_path(self, q_start, q_goal, plant_name, path_list = []):
+        path_list = path_list.copy()
         self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
         if q_start is not None and q_goal is not None:
             self.define_start_goal_positions(q_start, q_goal)
