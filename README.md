@@ -91,3 +91,7 @@ E. g. you want to define a box with 1.0 m lenght and 1.0 m width, you define it 
 - contype: which layer am I on
 - coaffinity: what layers do i collide with
 A collision occurs if (geom1.contype & geom2.coaffinity) || (geom2.contype & geom1.coaffinity) != 0
+
+**Collision Checking**
+The collision_free method of the Motion Planner uses mujoco data to check where the plants, the table and the trays are. It calculates physical contacts between the robots meshes and the objects defined in the xml. The collision_free method is used by the Grasp Sampler and the Motion Planner.
+The check_collisions function in the Pin Robot only checks for self collisions using pinocchio forward kinematics.
