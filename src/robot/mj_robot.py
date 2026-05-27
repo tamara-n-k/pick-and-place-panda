@@ -22,7 +22,6 @@ class MJRobot:
 
 
     def set_gripper_ctrl(self, width):       
-        print(f"Setting gripper control to width: {width}")
         self.data.ctrl[7] = width
         return True
 
