@@ -25,25 +25,42 @@ class Environment:
         mujoco.mj_step(self.robot.model, self.robot.data)
 
     def set_state(self, pose):
-        if len(pose) == 9:
+        pose = np.asarray(pose)
+
+        if len(pose) == self.robot.model.nq:
             self.robot.data.qpos[:] = pose
+        elif len(pose) == 9:
+            self.robot.data.qpos[:9] = pose
         elif len(pose) == 7:
             self.robot.data.qpos[:7] = pose
         else:
-            raise ValueError(f"Expected 7 or 9 joints, got {len(pose)}")
+            raise ValueError(f"Expected 7, 9, or {self.robot.model.nq} qpos values, got {len(pose)}")
         self.robot.data.qvel[:] = 0
         self.robot.data.qacc[:] = 0
 
         mujoco.mj_forward(self.robot.model, self.robot.data)
         if hasattr(self, 'pin'):
-            self.pin.update_state(pose) # update pinocchio geometry for collision checking
+            self.pin.update_state(self.robot.data.qpos[:7]) # update pinocchio geometry for collision checking
 
         if self.mj_viewer.is_running():
             self.mj_viewer.sync()
 
 
+    def get_arm_state(self):
+        return np.copy(self.robot.data.qpos[:7])
+
+
+    def get_full_state(self):
+        return np.copy(self.robot.data.qpos)
+
+
+    def get_gripper_state(self):
+        return np.copy(self.robot.data.qpos[7:9])
+
+
     def get_state(self):
-        return np.copy(self.pin.q)
+        return self.get_arm_state()
+
 
     def get_body_pos(self, body_name):
         world_pos = self.robot.data.body(body_name).xpos
