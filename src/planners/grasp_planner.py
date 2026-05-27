@@ -90,8 +90,8 @@ class GraspSampler:
                         is_safe = self.planner.collision_free(q_sol)
                         # unmask the box for future checks
                         self.planner.set_collision_mask(plant_name, ignore=False)
-                        if is_safe:
-                            candidates.append({'q': q_sol, 'pose': target_se3, 'score': 0.0}) # score will be calculated later
+                        if not is_safe:
+                            continue
                         # Calculate metrics
                         clearance = self._calculate_clearance()
                         joint_penalty = self._calculate_joint_penalty(q_sol)
