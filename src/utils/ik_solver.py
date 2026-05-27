@@ -20,12 +20,9 @@ class IKSolver:
             err_vec = self.robot.frame_error(q, target_SE3)
             cost_pose = np.sum(err_vec**2)
 
-            cost_coll = 0.0
-            dist = self.robot.check_collisions(q)
-            cost_coll = 0.0
-            if dist < margin:
-                # Quadratic penalty creates a smooth gradient for the solver
-                cost_coll = weight_coll * (margin - dist)**2
+            in_collision = self.robot.check_collisions(q) # returns True if any collision is detected
+            # add a collision cost if in collision else 0
+            cost_coll = weight_coll if in_collision else 0.0
 
             return cost_pose + cost_coll
         
