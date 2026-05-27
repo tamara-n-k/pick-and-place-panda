@@ -14,32 +14,36 @@ class PickAndPlace:
         self.approach_margin = 0.1
 
     def execute_move(self, q_goal_arm, plant_name, linear=False):
-        current_q_full = self.env.get_state()
-        q_start_arm = current_q_full[:7]
-        q_gripper = current_q_full[7:]
+        q_start_arm = self.env.get_arm_state()
+        q_gripper = self.env.get_gripper_state()
         
-        if not self.planner.collision_free(current_q_full):
+        if not self.planner.collision_free(q_start_arm):
             print("CRITICAL: Planner reports initialization state is in structural collision!")
-        
+
         path_list_7dof = []
         self.planner.set_collision_mask(plant_name, ignore=True)
 
         if linear:
             print(f"Executing linear path to: {q_goal_arm}")
-            path_arm = self.planner.find_linear_path(q_start_arm, q_goal_arm, plant_name, path_list_7dof)
-            if path_arm is None:
+            path_list_7dof = self.planner.find_linear_path(q_start_arm, q_goal_arm, plant_name)
+            if path_list_7dof is None:
+                self.planner.set_collision_mask(plant_name, ignore=False)
                 return False
         else:
             print(f"Executing RRT path to: {q_goal_arm}")
             path_arm = self.planner.find_path_rrt(q_start_arm, q_goal_arm, plant_name)
             if path_arm is None:
+                self.planner.set_collision_mask(plant_name, ignore=False)
                 return False
             
             pdef = self.planner.pdef
-            if pdef.hasExactSolution():
-                ompl_states = path_arm.getStates()
-                path_list_7dof = [np.array([ompl_states[i][j] for j in range(7)]) for i in range(len(ompl_states))]
-                    
+            if pdef.hasExactSolution() or path_arm is not None:
+                try:
+                    ompl_states = path_arm.getStates()
+                    path_list_7dof = [np.array([ompl_states[i][j] for j in range(7)]) for i in range(len(ompl_states))]
+                except AttributeError:
+                    path_list_7dof = path_arm
+                        
         self.planner.set_collision_mask(plant_name, ignore=False)
 
         if len(path_list_7dof) > 0:
