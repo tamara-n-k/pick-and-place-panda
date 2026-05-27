@@ -10,12 +10,11 @@ class TaskState(Enum):
     APPROACH_PICK = auto()
     DESCEND_PICK = auto()
     GRASPING = auto()
-    WELDING = auto()
+    GRASP_SETTLE = auto()
     LIFT_PICK = auto()
     
     APPROACH_PLACE = auto()
     DESCEND_PLACE = auto()
-    UNWELDING = auto()
     RELEASE = auto()
     RETRACT_PLACE = auto()
     
@@ -42,18 +41,12 @@ class PickAndPlaceStateMachine:
         self.q_place_drop = q_place_drop
         
         self.state = TaskState.IDLE
-        self.weld_id = mujoco.mj_name2id(self.env.robot.model, mujoco.mjtObj.mjOBJ_EQUALITY, "plant_attachment")
-
 
     def run(self):
         self.state = TaskState.OPEN_GRIPPER
         
         while self.state not in [TaskState.COMPLETED, TaskState.FAILED]:
             self.update_fsm()
-            self.env.step()
-            if self.env.mj_viewer.is_running():
-                self.env.mj_viewer.sync()
-
         return self.state == TaskState.COMPLETED
 
 
@@ -63,11 +56,9 @@ class PickAndPlaceStateMachine:
             TaskState.APPROACH_PICK:  self._handle_approach_pick,
             TaskState.DESCEND_PICK:   self._handle_descend_pick,
             TaskState.GRASPING:       self._handle_grasping,
-            TaskState.WELDING:        self._handle_welding,
             TaskState.LIFT_PICK:      self._handle_lift_pick,
             TaskState.APPROACH_PLACE: self._handle_approach_place,
             TaskState.DESCEND_PLACE:  self._handle_descend_place,
-            TaskState.UNWELDING:      self._handle_unwelding,
             TaskState.RELEASE:        self._handle_release,
             TaskState.RETRACT_PLACE:  self._handle_retract_place,
         }
@@ -96,11 +87,7 @@ class PickAndPlaceStateMachine:
 
     def _handle_descend_pick(self):
         print(f"FSM: Descending onto {self.plant_name}...")            
-        success = self.task.execute_move(self.q_grasp, self.plant_name, linear=True)
-        
-        self.task.planner.set_collision_mask(self.plant_name, ignore=False)
-        self.task.planner.set_collision_mask("tabletop", ignore=False)
-        
+        success = self.task.execute_move(self.q_grasp, self.plant_name, linear=True)       
         if success:
             self.state = TaskState.GRASPING
         else:
@@ -113,7 +100,7 @@ class PickAndPlaceStateMachine:
         
         # Lock arm joints while jaws contract
         for _ in range(200):
-            current_gripper_q = self.env.get_state()[7:]
+            current_gripper_q = self.env.get_gripper_state()
             anchor_state = np.concatenate((self.q_grasp[:7], current_gripper_q))
             self.env.set_state(anchor_state)
             self.env.step()
@@ -121,23 +108,11 @@ class PickAndPlaceStateMachine:
                 self.env.mj_viewer.sync()
         
         if self.check_grasp():
-            print("FSM: Grasp contact validated visually and physically.")
-            self.state = TaskState.WELDING
+            self.state = TaskState.LIFT_PICK
         else:
-            print("CRITICAL: Jaws closed but contact validation failed.")
             self.state = TaskState.FAILED
 
     
-    def _handle_welding(self):
-        print(f"FSM: Welder tracking target -> {self.plant_name}")
-        body1_id = mujoco.mj_name2id(self.env.robot.model, mujoco.mjtObj.mjOBJ_BODY, "hand_tcp")
-        body2_id = mujoco.mj_name2id(self.env.robot.model, mujoco.mjtObj.mjOBJ_BODY, self.plant_name)
-        self.env.robot.model.eq_obj1id[self.weld_id] = body1_id
-        self.env.robot.model.eq_obj2id[self.weld_id] = body2_id
-        mujoco.mj_forward(self.env.robot.model, self.env.robot.data)
-        self.state = TaskState.LIFT_PICK
-
-
     def _handle_lift_pick(self):
         print("FSM: Elevating structural target payload...")
         self.task.planner.set_collision_mask(self.plant_name, ignore=True)
@@ -159,39 +134,23 @@ class PickAndPlaceStateMachine:
 
     def _handle_descend_place(self):
         print(f"FSM: Linear insert descent into the tray hole...")
-        self.task.planner.set_collision_mask(self.plant_name, ignore=True)
         if self.task.execute_move(self.q_place_drop, self.plant_name, linear=True):
-            self.state = TaskState.UNWELDING
+            self.state = TaskState.RELEASE
         else:
             self.state = TaskState.FAILED
 
 
-    def _handle_unwelding(self):
-        print("FSM: Releasing MuJoCo spatial constraint weld lock...")
-        self.env.robot.data.eq_active[self.weld_id] = 0
-        mujoco.mj_forward(self.env.robot.model, self.env.robot.data)
-        self.state = TaskState.RELEASE
-
-
     def _handle_release(self):
-        print("FSM: Opening jaws to release payload...")
-        self.env.robot.set_gripper_ctrl(width=0.04)
-        
-        # Hold the position fixed while fingers expand
+        print("FSM: Opening jaws to release payload...")        
         for _ in range(150):
-            current_gripper_q = self.env.get_state()[7:]
-            anchor_state = np.concatenate((self.q_place_drop[:7], current_gripper_q))
-            self.env.set_state(anchor_state)
+            self.env.set_state(self.q_place_drop[:7])
+            self.env.robot.set_gripper_ctrl(width=0.04)
             self.env.step()
-            if self.env.mj_viewer.is_running():
-                self.env.mj_viewer.sync()
-        
         self.state = TaskState.RETRACT_PLACE
 
 
     def _handle_retract_place(self):
         print("FSM: Retracting arm straight up back to safety...")
-        self.task.planner.set_collision_mask(self.plant_name, ignore=False)
         if self.task.execute_move(self.q_place_approach, self.plant_name, linear=True):
             self.state = TaskState.COMPLETED
         else:
@@ -199,23 +158,29 @@ class PickAndPlaceStateMachine:
 
 
     def check_grasp(self):
-        f1_id = mujoco.mj_name2id(self.env.robot.model, mujoco.mjtObj.mjOBJ_BODY, "left_finger")
-        f2_id = mujoco.mj_name2id(self.env.robot.model, mujoco.mjtObj.mjOBJ_BODY, "right_finger")
-        box_id = mujoco.mj_name2id(self.env.robot.model, mujoco.mjtObj.mjOBJ_BODY, self.plant_name)
-
-        touch_f1, touch_f2 = False, False
         data = self.env.robot.data
         model = self.env.robot.model
 
+        touch_f1, touch_f2 = False, False
+
+        # Loop through every active contact point
         for i in range(data.ncon):
             contact = data.contact[i]
-            b1 = model.geom_bodyid[contact.geom1]
-            b2 = model.geom_bodyid[contact.geom2]
+            
+            # get body ids
+            b1_id = model.geom_bodyid[contact.geom1]
+            b2_id = model.geom_bodyid[contact.geom2]
+            
+            # convert to body names
+            b1_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, b1_id)
+            b2_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, b2_id)
 
-            if (b1 == f1_id and b2 == box_id) or (b1 == box_id and b2 == f1_id):
-                touch_f1 = True
-            if (b1 == f2_id and b2 == box_id) or (b1 == box_id and b2 == f2_id):
-                touch_f2 = True
+            if b1_name and b2_name:
+                if ("finger" in b1_name and self.plant_name in b2_name) or ("finger" in b2_name and self.plant_name in b1_name):
+                    if "left" in b1_name or "left" in b2_name:
+                        touch_f1 = True
+                    if "right" in b1_name or "right" in b2_name:
+                        touch_f2 = True
 
         print(f"Grasp check: Left finger contact: {touch_f1}, Right finger contact: {touch_f2}")
         return touch_f1 and touch_f2
