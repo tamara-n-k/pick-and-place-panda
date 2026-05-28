@@ -17,6 +17,8 @@ class TaskState(Enum):
     DESCEND_PLACE = auto()
     RELEASE = auto()
     RETRACT_PLACE = auto()
+
+    HOME_RETURN = auto()
     
     COMPLETED = auto()
     FAILED = auto()
@@ -61,6 +63,7 @@ class PickAndPlaceStateMachine:
             TaskState.DESCEND_PLACE:  self._handle_descend_place,
             TaskState.RELEASE:        self._handle_release,
             TaskState.RETRACT_PLACE:  self._handle_retract_place,
+            TaskState.HOME_RETURN:     self._move_home
         }
 
         handler = state_handlers.get(self.state)
@@ -155,11 +158,19 @@ class PickAndPlaceStateMachine:
     def _handle_retract_place(self):
         print("FSM: Retracting arm straight up back to safety...")
         if self.task.execute_move(self.q_place_approach, self.plant_name, linear=True, gripper_width=0.04):
-            self.state = TaskState.COMPLETED
+            self.state = TaskState.HOME_RETURN
         else:
             self.state = TaskState.FAILED
 
 
+    def _move_home(self):
+        print("FSM: Moving to home position...")
+        if self.task.execute_move(self.env.robot.home_pose, plant_name=self.plant_name, linear=False):
+            self.state = TaskState.COMPLETED
+        else:
+            self.state = TaskState.FAILED
+
+    #### Grasp verification using contact information from Mujoco
     def check_grasp(self):
         data = self.env.robot.data
         model = self.env.robot.model
