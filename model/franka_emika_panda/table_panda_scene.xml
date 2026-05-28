@@ -338,24 +338,48 @@
 
     <!-- tray for picking up objects -->
     <body name="tray_pick_up" pos="-0.3 0.1 0.82" euler="1.5708 0 0">
-      <geom name="tray_pick_up_mesh" type="mesh" mesh="tray_pick_up" rgba="0.2 0.2 0.2 1" 
-      contype="0" conaffinity="0" group="2"/>
+    <!-- detailed visual stl -->
+      <geom name="tray_pick_up_visual"
+            type="mesh"
+            mesh="tray_pick_up"
+            rgba="0.2 0.2 0.2 1"
+            contype="0"
+            conaffinity="0"
+            group="2"/>
 
-      <geom name="tray_pick_up_collision" type="box" size="0.3 0.06 0.2" pos="0.3 0.06 -0.2" rgba="0 1 0 0" 
-      contype="1" conaffinity="1" group="4"/>
+    <!-- simple box collision -->
+      <geom name="tray_pick_up_col_base_layer"
+            type="box"
+            pos="0.3 0.0 -0.2"
+            size="0.3 0.05 0.2"
+            rgba="0.1 0.8 0.1 0.25"
+            contype="1"
+            conaffinity="1"
+            friction="1.5 0.005 0.0001"
+            group="3"/>
+
     </body>
 
     <!-- tray for placing objects -->
     <body name="tray_place_down" pos="-0.35 -0.5 0.82" euler="1.5708 0 0">
-      <geom name="tray_place_down_mesh" type="mesh" mesh="tray_place_down" rgba="0.2 0.2 0.2 1" 
-      contype="0" conaffinity="0" group="2"/>
+      <geom name="tray_place_down_visual" type="mesh" mesh="tray_place_down" rgba="0.2 0.2 0.2 1" 
+        contype="0" conaffinity="0"/>
 
-      <geom name="tray_place_down_collision" type="box" size="0.36 0.027 0.12" pos="0.36 0.027 -0.12" rgba="0 0 0 0" 
-      contype="1" conaffinity="1" group="3"/>
+      <geom name="tray_place_down_col_base_layer"
+            type="box"
+            pos="0.35 0.0 -0.12"
+            size="0.37 0.03 0.12"
+            rgba="0.1 0.8 0.1 0.25"
+            contype="1"
+            conaffinity="1"
+            friction="1.5 0.005 0.0001"
+            group="3"/>
+
+        
     </body>
 
   <!-- plants -->
-  <body name="plant_1" pos="0.15 0.3 1.0" >
+  <body name="plant_1" pos="0.15 0.31 1.0" >
       <joint type="free" name="plant_1_free"/>
       <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
       <geom name="plant_1_cube" type="box" size="0.025 0.025 0.03" rgba="0.6 0.3 0.1 1" 
