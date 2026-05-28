@@ -402,21 +402,21 @@
   </equality>
 
   <actuator>
-      <!-- Velocity control -->
+      <!-- Position control for arm joints: force = kp * (ctrl - qpos) - kd * qvel -->
       <general class="panda" name="actuator1" joint="joint1" dynprm="1 0 0"
-               gainprm="450" biasprm="0 0 -450" ctrlrange="-2.175 2.175" forcerange="-87 87"/>
+               gainprm="450" biasprm="0 -450 -45" ctrlrange="-2.8973 2.8973" forcerange="-87 87"/>
       <general class="panda" name="actuator2" joint="joint2" dynprm="1 0 0"
-               gainprm="450" biasprm="0 0 -450" ctrlrange="-2.175 2.175" forcerange="-87 87"/>
+               gainprm="450" biasprm="0 -450 -45" ctrlrange="-1.7628 1.7628" forcerange="-87 87"/>
       <general class="panda" name="actuator3" joint="joint3" dynprm="1 0 0"
-               gainprm="350" biasprm="0 0 -350" ctrlrange="-2.175 2.175" forcerange="-87 87"/>
+               gainprm="350" biasprm="0 -350 -35" ctrlrange="-2.8973 2.8973" forcerange="-87 87"/>
       <general class="panda" name="actuator4" joint="joint4" dynprm="1 0 0"
-               gainprm="350" biasprm="0 0 -350" ctrlrange="-2.175 2.175" forcerange="-87 87"/>
+               gainprm="350" biasprm="0 -350 -35" ctrlrange="-3.0718 -0.0698" forcerange="-87 87"/>
       <general class="panda" name="actuator5" joint="joint5" dynprm="1 0 0"
-               gainprm="200" biasprm="0 0 -200" ctrlrange="-2.61 2.61" forcerange="-12 12"/>
+               gainprm="200" biasprm="0 -200 -20" ctrlrange="-2.8973 2.8973" forcerange="-12 12"/>
       <general class="panda" name="actuator6" joint="joint6" dynprm="1 0 0"
-               gainprm="200" biasprm="0 0 -200" ctrlrange="-2.61 2.61" forcerange="-12 12"/>
+               gainprm="200" biasprm="0 -200 -20" ctrlrange="-0.0175 3.7525" forcerange="-12 12"/>
       <general class="panda" name="actuator7" joint="joint7" dynprm="1 0 0"
-               gainprm="200" biasprm="0 0 -200" ctrlrange="-2.61 2.61" forcerange="-12 12"/>
+               gainprm="200" biasprm="0 -200 -20" ctrlrange="-2.8973 2.8973" forcerange="-12 12"/>
       <!-- Position control -->
       <general class="panda" name="actuator8" tendon="split" forcerange="-100 100" ctrlrange="0 0.04"
                gainprm="1000 0 0" biasprm="0 -1000 -100"/>

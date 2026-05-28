@@ -22,6 +22,11 @@ class Environment:
         self.robot_base_mat = self.robot.data.body('link0').xmat.reshape(3, 3).copy()
 
     def step(self):
+        ### ---gravity compensation for arm joints: gravity, coriolis, centrifugal forces --- ###
+         # clear any existing forces from previous steps
+        self.robot.data.qfrc_applied[:] = 0
+         # apply compensationtorque equal to mujoco's internal gravity compensation for the arm joints
+        self.robot.data.qfrc_applied[:7] = self.robot.data.qfrc_bias[:7]
         mujoco.mj_step(self.robot.model, self.robot.data)
 
     def set_state(self, pose):
@@ -35,8 +40,13 @@ class Environment:
             self.robot.data.qpos[:7] = pose
         else:
             raise ValueError(f"Expected 7, 9, or {self.robot.model.nq} qpos values, got {len(pose)}")
+        # reset velocities to zero for stability
         self.robot.data.qvel[:] = 0
         self.robot.data.qacc[:] = 0
+        # set arm and gripper controls to match the new state
+        self.robot.set_arm_ctrl(self.robot.data.qpos[:7])
+        if self.robot.model.nu > 7:
+            self.robot.set_gripper_ctrl(np.sum(self.robot.data.qpos[7:9]))
 
         mujoco.mj_forward(self.robot.model, self.robot.data)
         if hasattr(self, 'pin'):
@@ -44,6 +54,22 @@ class Environment:
 
         if self.mj_viewer.is_running():
             self.mj_viewer.sync()
+
+    # simple open loop servo function to execute planned trajectories with position control
+    def servo_to(self, q_arm, gripper_width=None, steps=400, tolerance=0.01):
+        q_arm = np.asarray(q_arm)
+        self.robot.set_arm_ctrl(q_arm)
+        if gripper_width is not None:
+            self.robot.set_gripper_ctrl(gripper_width)
+
+        for _ in range(steps):
+            self.step()
+            if self.mj_viewer.is_running():
+                self.mj_viewer.sync()
+            if np.linalg.norm(self.robot.data.qpos[:7] - q_arm) < tolerance:
+                break # early exit if we are close enough to the target to save time
+
+        return np.linalg.norm(self.robot.data.qpos[:7] - q_arm) < tolerance
 
 
     def get_arm_state(self):

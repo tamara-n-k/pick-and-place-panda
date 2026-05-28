@@ -31,11 +31,11 @@ class MJRobot:
         self.n_jnts = self.model.njnt
         self.joint_names = [self.model.joint(i).name for i in range(self.model.njnt)]
 
-
+    # set control torques for arm (actuator command)
     def set_arm_ctrl(self, q_arm):
         self.data.ctrl[:7] = q_arm
 
-
+    # set control for gripper (actuator command)
     def set_gripper_ctrl(self, width):       
         self.data.ctrl[7] = width
         return True

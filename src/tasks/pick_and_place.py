@@ -13,7 +13,7 @@ class PickAndPlace:
         self.grasp_sampler = GraspSampler(self.env, self.ik, self.planner)
         self.approach_margin = 0.1
 
-    def execute_move(self, q_goal_arm, plant_name, linear=False):
+    def execute_move(self, q_goal_arm, plant_name, linear=False, gripper_width=None):
         q_start_arm = self.env.get_arm_state()
         q_gripper = self.env.get_gripper_state()
         
@@ -47,15 +47,11 @@ class PickAndPlace:
         self.planner.set_collision_mask(plant_name, ignore=False)
 
         if len(path_list_7dof) > 0:
-            full_path = [np.concatenate((q_arm, q_gripper)) for q_arm in path_list_7dof]
-            
-            # Step through points sequentially 
-            for q in full_path:
-                self.env.set_state(q)
-                self.env.step()
-                if self.env.mj_viewer.is_running():
-                    time.sleep(0.01)
-                    self.env.mj_viewer.sync()
+            for q_arm in path_list_7dof:
+                if not self.env.servo_to(q_arm, gripper_width=gripper_width):
+                    print(f"Servo failed to reach waypoint. Error: {np.linalg.norm(self.env.get_arm_state() - q_arm):.4f}")
+                    return False
+
             return True
         
         return False
