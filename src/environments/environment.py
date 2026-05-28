@@ -15,8 +15,10 @@ class Environment:
         #mujoco robot
         self.robot = MJRobot(mjcf_path)
         self.pin = PinRobot(urdf_path, mesh_dir)
-        self.mj_viewer = mujoco.viewer.launch_passive(self.robot.model, self.robot.data) # passive viewer for visualization
+        self.mj_viewer = None
         self.set_state(self.robot.home_pose)
+        print("Home position reached: ", self.robot.data.qpos[:7])
+        self.mj_viewer = mujoco.viewer.launch_passive(self.robot.model, self.robot.data) # passive viewer for visualization
         self.robot_base_pos = self.robot.data.body('link0').xpos.copy()
         print(f"Robot base position: {self.robot_base_pos}")
         self.robot_base_mat = self.robot.data.body('link0').xmat.reshape(3, 3).copy()
@@ -52,7 +54,7 @@ class Environment:
         if hasattr(self, 'pin'):
             self.pin.update_state(self.robot.data.qpos[:7]) # update pinocchio geometry for collision checking
 
-        if self.mj_viewer.is_running():
+        if self.mj_viewer is not None and self.mj_viewer.is_running():
             self.mj_viewer.sync()
 
     # simple open loop servo function to execute planned trajectories with position control
@@ -64,7 +66,7 @@ class Environment:
 
         for _ in range(steps):
             self.step()
-            if self.mj_viewer.is_running():
+            if self.mj_viewer is not None and self.mj_viewer.is_running():
                 self.mj_viewer.sync()
             if np.linalg.norm(self.robot.data.qpos[:7] - q_arm) < tolerance:
                 break # early exit if we are close enough to the target to save time
