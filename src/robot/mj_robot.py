@@ -1,4 +1,5 @@
 import mujoco
+import numpy as np
 
 class MJRobot:
     """
@@ -8,6 +9,16 @@ class MJRobot:
         if xml_path:
             self.load_model(xml_path)
             self.get_joint_limits()
+
+        self.home_pose = np.array([
+            0.0,
+            0.0,
+            0.0,
+            -1.5708,
+            0.0,
+            1.8675,
+            0.0
+        ])
 
     def load_model(self, xml_path):
         self.model = mujoco.MjModel.from_xml_path(xml_path)
