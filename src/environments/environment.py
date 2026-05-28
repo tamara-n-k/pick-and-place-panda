@@ -16,8 +16,6 @@ class Environment:
         self.robot = MJRobot(mjcf_path)
         self.pin = PinRobot(urdf_path, mesh_dir)
         self.mj_viewer = None
-        self.set_state(self.robot.home_pose)
-        print("Home position reached: ", self.robot.data.qpos[:7])
         self.mj_viewer = mujoco.viewer.launch_passive(self.robot.model, self.robot.data) # passive viewer for visualization
         self.robot_base_pos = self.robot.data.body('link0').xpos.copy()
         print(f"Robot base position: {self.robot_base_pos}")

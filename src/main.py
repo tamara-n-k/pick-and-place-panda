@@ -14,7 +14,10 @@ if __name__ == "__main__":
     mesh_dir = "model/franka_emika_panda/assets"
     
     env = Environment(xml_path, urdf_path, mesh_dir)
-    
+
+    env.set_state(env.robot.home_pose)
+    print("Home position reached: ", env.robot.data.qpos[:7])
+
     Viewer.setup_initial_view(env)
 
     # initial settling loop 
