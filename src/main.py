@@ -19,6 +19,7 @@ if __name__ == "__main__":
     print("Home position reached: ", env.robot.data.qpos[:7])
 
     Viewer.setup_initial_view(env)
+    Viewer.set_collision_visualization(env, False)
 
     # initial settling loop 
     for _ in range(100):
