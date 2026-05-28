@@ -17,11 +17,16 @@ if __name__ == "__main__":
     
     Viewer.setup_initial_view(env)
 
+    # initial settling loop 
     for _ in range(100):
+        env.robot.set_arm_ctrl(env.robot.home_pose)
         env.step()
-    
+        if env.mj_viewer.is_running():
+            env.mj_viewer.sync()
+        time.sleep(env.robot.model.opt.timestep)
+
     task = PickAndPlace(env, MotionPlanner(env), IKSolver(env.pin))
-    plants = ["plant_5"]
+    plants = ["plant_1", "plant_2"]
 
     for plant in plants:
         success =task.execute_pick_and_place(plant_name=plant, tray_name="tray_place_down", hole_offset_local=np.array([0.28, 0.1, -0.18]))
@@ -39,5 +44,4 @@ if __name__ == "__main__":
         pass
 
     
-
 
