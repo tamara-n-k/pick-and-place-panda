@@ -100,12 +100,10 @@ class PickAndPlaceStateMachine:
         
         # Lock arm joints while jaws contract
         for _ in range(200):
-            current_gripper_q = self.env.get_gripper_state()
-            anchor_state = np.concatenate((self.q_grasp[:7], current_gripper_q))
-            self.env.set_state(anchor_state)
+            self.env.robot.set_arm_ctrl(self.q_grasp[:7])
+            self.env.robot.set_gripper_ctrl(0.0)
             self.env.step()
-            if self.env.mj_viewer.is_running():
-                self.env.mj_viewer.sync()
+            self.env.mj_viewer.sync()
         
         if self.check_grasp():
             self.state = TaskState.LIFT_PICK
@@ -116,7 +114,7 @@ class PickAndPlaceStateMachine:
     def _handle_lift_pick(self):
         print("FSM: Elevating structural target payload...")
         self.task.planner.set_collision_mask(self.plant_name, ignore=True)
-        if self.task.execute_move(self.q_pick_lift, self.plant_name, linear=False):
+        if self.task.execute_move(self.q_pick_lift, self.plant_name, linear=False, gripper_width=0.0):
             self.state = TaskState.APPROACH_PLACE
         else:
             self.state = TaskState.FAILED
@@ -143,8 +141,8 @@ class PickAndPlaceStateMachine:
     def _handle_release(self):
         print("FSM: Opening jaws to release payload...")        
         for _ in range(150):
-            self.env.set_state(self.q_place_drop[:7])
-            self.env.robot.set_gripper_ctrl(width=0.04)
+            self.env.robot.set_arm_ctrl(self.q_place_drop[:7])
+            self.env.robot.set_gripper_ctrl(0.04)
             self.env.step()
         self.state = TaskState.RETRACT_PLACE
 

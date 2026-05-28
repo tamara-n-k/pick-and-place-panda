@@ -22,7 +22,7 @@ class MJRobot:
 
     def load_model(self, xml_path):
         self.model = mujoco.MjModel.from_xml_path(xml_path)
-        self.model.opt.timestep = 0.008
+        self.model.opt.timestep = 0.005
         print(f"timestep: {self.model.opt.timestep}")
         self.data = mujoco.MjData(self.model)
         self.n_arm_dofs = 7
@@ -30,6 +30,10 @@ class MJRobot:
         self.n_dofs = self.model.nv 
         self.n_jnts = self.model.njnt
         self.joint_names = [self.model.joint(i).name for i in range(self.model.njnt)]
+
+
+    def set_arm_ctrl(self, q_arm):
+        self.data.ctrl[:7] = q_arm
 
 
     def set_gripper_ctrl(self, width):       
