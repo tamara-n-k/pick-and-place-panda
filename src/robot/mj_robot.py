@@ -12,17 +12,17 @@ class MJRobot:
 
         self.home_pose = np.array([
             0.0,
+            -0.785,   # -45°
             0.0,
+            -2.356,   # -135°
             0.0,
-            -1.5708,
-            0.0,
-            1.8675,
-            0.0
+            1.571,   # 90°
+            0.785    # 45°
         ])
 
     def load_model(self, xml_path):
         self.model = mujoco.MjModel.from_xml_path(xml_path)
-        self.model.opt.timestep = 0.005
+        self.model.opt.timestep = 0.003
         print(f"timestep: {self.model.opt.timestep}")
         self.data = mujoco.MjData(self.model)
         self.n_arm_dofs = 7
