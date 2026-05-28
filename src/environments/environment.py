@@ -76,13 +76,6 @@ class Environment:
         return np.copy(self.robot.data.qpos[:7])
 
 
-    def get_full_state(self):
-        return np.copy(self.robot.data.qpos)
-
-
-    def get_gripper_state(self):
-        return np.copy(self.robot.data.qpos[7:9])
-
 
     def get_state(self):
         return self.get_arm_state()
@@ -96,20 +89,3 @@ class Environment:
         relative_pos = self.robot_base_mat.T @ centered_pos
         print(f"World position of {body_name}: {world_pos}, Relative position: {relative_pos}")
         return relative_pos
-    
-
-    def get_place_pose(self, tray_name, hole_offset_local, target_box_rotation):
-        tray_world_pos = self.robot.data.body(tray_name).xpos
-        tray_world_mat = self.robot.data.body(tray_name).xmat.reshape(3, 3)
-        
-        hole_world_pos = tray_world_pos + (tray_world_mat @ hole_offset_local)
-        
-        centered_pos = hole_world_pos - self.robot_base_pos
-        hole_relative_pos = self.robot_base_mat.T @ centered_pos
-        
-        hole_relative_mat = self.robot_base_mat.T @ target_box_rotation
-        
-        place_SE3 = pin.SE3(hole_relative_mat, hole_relative_pos)
-        
-        print(f"Relative Base Pos packed into SE3: {hole_relative_pos}")
-        return place_SE3

@@ -1,6 +1,6 @@
 from robot.pin_robot import PinRobot
 import numpy as np
-from scipy.optimize import least_squares, minimize
+from scipy.optimize import minimize
 import pinocchio as pin
 
 
@@ -9,12 +9,10 @@ class IKSolver:
     computes the inverse kinematics of the cartesian position using Least Squares "trf":
     as the panda is a 7dof robot and task space is 6dof, the solutions can be different
     """
-    def __init__(self, robot: PinRobot, margin_coll=0.02, beta_coll=10.0):
+    def __init__(self, robot: PinRobot):
         self.robot = robot
-        self.margin_coll = margin_coll
-        self.beta_coll = beta_coll
 
-    def solve(self, q_init, target_SE3, margin=0.05, weight_coll=100.0):
+    def solve(self, q_init, target_SE3, weight_coll=100.0):
         def objective(q):
             # sqared frame error for scalar optimization
             err_vec = self.robot.frame_error(q, target_SE3)

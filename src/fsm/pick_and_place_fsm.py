@@ -1,8 +1,5 @@
-import time
 from enum import Enum, auto
-import numpy as np
 import mujoco
-import pinocchio as pin
 
 class TaskState(Enum):
     IDLE = auto()
@@ -10,7 +7,6 @@ class TaskState(Enum):
     APPROACH_PICK = auto()
     DESCEND_PICK = auto()
     GRASPING = auto()
-    GRASP_SETTLE = auto()
     LIFT_PICK = auto()
     
     APPROACH_PLACE = auto()
