@@ -70,10 +70,13 @@ class PickAndPlaceStateMachine:
 
     def _handle_open_gripper(self):
         print("FSM: Opening gripper...")
-        self.env.robot.set_gripper_ctrl(width=0.04)
-        # Give the physical engine 50 frames to open up
-        for _ in range(50):
+        current_q = self.env.get_state()[:7]
+        for _ in range(100): 
+            self.env.robot.set_arm_ctrl(current_q)
+            self.env.robot.set_gripper_ctrl(width=0.04)# set gripper control
             self.env.step()
+            if self.env.mj_viewer.is_running():
+                self.env.mj_viewer.sync()
         self.state = TaskState.APPROACH_PICK
     
 
@@ -96,18 +99,18 @@ class PickAndPlaceStateMachine:
 
     def _handle_grasping(self):
         print("FSM: Closing jaws...")
-        self.env.robot.set_gripper_ctrl(width=0.0)
-        
-        # Lock arm joints while jaws contract
-        for _ in range(200):
+        for _ in range(500):
             self.env.robot.set_arm_ctrl(self.q_grasp[:7])
-            self.env.robot.set_gripper_ctrl(0.0)
+            self.env.robot.set_gripper_ctrl(width=0.0)
             self.env.step()
-            self.env.mj_viewer.sync()
+            if self.env.mj_viewer.is_running():
+                self.env.mj_viewer.sync()
         
         if self.check_grasp():
+            print("FSM: Grasp verified successfully!")
             self.state = TaskState.LIFT_PICK
         else:
+            print("FSM: CRITICAL - Grasp failed validation check.")
             self.state = TaskState.FAILED
 
     
@@ -124,7 +127,7 @@ class PickAndPlaceStateMachine:
     def _handle_approach_place(self):
         print(f"FSM: Transit to target place approach above {self.tray_name}...")
         self.task.planner.set_collision_mask(self.plant_name, ignore=True)
-        if self.task.execute_move(self.q_place_approach, self.plant_name, linear=False):
+        if self.task.execute_move(self.q_place_approach, self.plant_name, linear=False, gripper_width=0.0):
             self.state = TaskState.DESCEND_PLACE
         else:
             self.state = TaskState.FAILED
@@ -132,7 +135,7 @@ class PickAndPlaceStateMachine:
 
     def _handle_descend_place(self):
         print(f"FSM: Linear insert descent into the tray hole...")
-        if self.task.execute_move(self.q_place_drop, self.plant_name, linear=True):
+        if self.task.execute_move(self.q_place_drop, self.plant_name, linear=True, gripper_width=0.0):
             self.state = TaskState.RELEASE
         else:
             self.state = TaskState.FAILED
@@ -140,16 +143,18 @@ class PickAndPlaceStateMachine:
 
     def _handle_release(self):
         print("FSM: Opening jaws to release payload...")        
-        for _ in range(150):
+        for _ in range(500):
             self.env.robot.set_arm_ctrl(self.q_place_drop[:7])
             self.env.robot.set_gripper_ctrl(0.04)
             self.env.step()
+            if self.env.mj_viewer.is_running():
+                self.env.mj_viewer.sync()
         self.state = TaskState.RETRACT_PLACE
 
 
     def _handle_retract_place(self):
         print("FSM: Retracting arm straight up back to safety...")
-        if self.task.execute_move(self.q_place_approach, self.plant_name, linear=True):
+        if self.task.execute_move(self.q_place_approach, self.plant_name, linear=True, gripper_width=0.04):
             self.state = TaskState.COMPLETED
         else:
             self.state = TaskState.FAILED
