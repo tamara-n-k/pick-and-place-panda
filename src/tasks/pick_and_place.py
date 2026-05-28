@@ -12,10 +12,10 @@ class PickAndPlace:
         self.ik = ik_solver
         self.grasp_sampler = GraspSampler(self.env, self.ik, self.planner)
         self.approach_margin = 0.1
+        self.place_offset_index = 0
 
     def execute_move(self, q_goal_arm, plant_name, linear=False, gripper_width=None):
         q_start_arm = self.env.get_arm_state()
-        q_gripper = self.env.get_gripper_state()
         
         if not self.planner.collision_free(q_start_arm):
             print("CRITICAL: Planner reports initialization state is in structural collision!")
@@ -57,15 +57,16 @@ class PickAndPlace:
         return False
 
 
-    def execute_pick_and_place(self, plant_name, tray_name, hole_offset_local):
+    def execute_pick_and_place(self, plant_name, tray_name, hole_offsets):
         current_q = self.env.get_state()
+        selected_hole_offset = self._select_place_offset(hole_offsets)
         
         pick_configs = self._compute_pick_configurations(plant_name, current_q)
         if pick_configs is None:
             return False
         q_grasp, q_pick_approach, q_pick_lift = pick_configs
 
-        place_configs = self._compute_place_configurations(tray_name, hole_offset_local, q_pick_lift)
+        place_configs = self._compute_place_configurations(tray_name, selected_hole_offset, q_pick_lift)
         if place_configs is None:
             return False
         q_place_approach, q_place_drop = place_configs
@@ -82,6 +83,20 @@ class PickAndPlace:
             q_place_drop=q_place_drop
         )
         return fsm.run()
+
+
+    def _select_place_offset(self, hole_offsets):
+        offsets = np.asarray(hole_offsets, dtype=float)
+        if offsets.shape == (3,):
+            return offsets
+        if offsets.ndim != 2 or offsets.shape[1] != 3 or len(offsets) == 0:
+            raise ValueError("Expected a single hole offset with shape (3,) or a list/array of offsets with shape (N, 3)")
+
+        index = self.place_offset_index % len(offsets)
+        selected_offset = offsets[index]
+        self.place_offset_index += 1
+        print(f"Selected place offset {index + 1}/{len(offsets)}: {selected_offset}")
+        return selected_offset
     
 
     def _compute_pick_configurations(self, plant_name, current_q):
