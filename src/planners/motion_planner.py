@@ -64,6 +64,57 @@ class MotionPlanner:
             self.start[i] = start[i]
             self.goal[i] = goal[i]
 
+    def _body_is_robot(self, body_id):
+        m = self.env.robot.model
+        robot_root_id = m.body("link0").id
+
+        while body_id != 0:
+            if body_id == robot_root_id:
+                return True
+            body_id = m.body_parentid[body_id]
+
+        return False
+
+    def _body_is_forbidden_object(self, body_id):
+        m = self.env.robot.model
+        body_name = m.body(body_id).name or ""
+        forbidden_objects = ["table", "tray", "plant"]
+
+        return any(obj in body_name for obj in forbidden_objects)
+
+    def _contact_is_forbidden(self, con):
+        m = self.env.robot.model
+        geom1 = m.geom(con.geom1)
+        geom2 = m.geom(con.geom2)
+
+        side1_is_robot = self._body_is_robot(geom1.bodyid)
+        side2_is_robot = self._body_is_robot(geom2.bodyid)
+        side1_is_forbidden = self._body_is_forbidden_object(geom1.bodyid)
+        side2_is_forbidden = self._body_is_forbidden_object(geom2.bodyid)
+
+        return (
+            (side1_is_robot and side2_is_forbidden)
+            or (side2_is_robot and side1_is_forbidden)
+        )
+
+    def _forbidden_contact_names(self):
+        d = self.planner_data
+        m = self.env.robot.model
+        contacts = []
+
+        for i in range(d.ncon):
+            con = d.contact[i]
+            if not self._contact_is_forbidden(con):
+                continue
+
+            g1 = m.geom(con.geom1).name or "unknown" or ""
+            g2 = m.geom(con.geom2).name or "unknown" or ""
+            b1 = m.body(m.geom(con.geom1).bodyid).name or "unknown" or ""
+            b2 = m.body(m.geom(con.geom2).bodyid).name or "unknown" or ""
+            contacts.append((g1, b1, g2, b2))
+
+        return contacts
+
 
     def collision_free(self, state):
         d = self.planner_data
@@ -71,15 +122,11 @@ class MotionPlanner:
         for i in range(7):
             d.qpos[i] = state[i]
         mujoco.mj_forward(m, d) # run forward kinematics without affecting viewer
-        for i in range(d.ncon):
-            con = d.contact[i]
-            geom1_name = m.geom(con.geom1).name or ""
-            geom2_name = m.geom(con.geom2).name or ""
 
-            forbidden_contacts = ["table", "tray", "plant"] # any contact involving these is a collision
-            
-            if any(obs in geom1_name or obs in geom2_name for obs in forbidden_contacts):
+        for i in range(d.ncon):
+            if self._contact_is_forbidden(d.contact[i]):
                 return False
+
         return True
 
 
@@ -112,11 +159,8 @@ class MotionPlanner:
             d = self.planner_data 
             m = self.env.robot.model
             print(f"CRITICAL: {'Start' if not start_valid else 'Goal'} state in collision!")
-            for i in range(d.ncon):
-                con = d.contact[i]
-                g1 = m.geom(con.geom1).name or "unknown"
-                g2 = m.geom(con.geom2).name or "unknown"
-                print(f" CONTACT: {g1} <--> {g2}")
+            for g1, b1, g2, b2 in self._forbidden_contact_names():
+                print(f" CONTACT: {g1} ({b1}) <--> {g2} ({b2})")
                 
             return False
         return True
