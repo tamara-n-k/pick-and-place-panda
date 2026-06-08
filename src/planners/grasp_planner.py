@@ -112,3 +112,42 @@ class GraspSampler:
         # Pick the winner
         candidates.sort(key=lambda x: x['score'], reverse=True)
         return candidates[0]['q'], candidates[0]['pose']
+    
+    def find_valid_placement(self, place_pos, q_seed, plant_name=None, tray_base_mat=None):
+        candidates = []
+        rolls = np.linspace(-np.pi/2, np.pi/2, 5)
+        direction = np.array([0.0, 0.0, -1.0])
+        
+        for roll in rolls:
+            target_se3 = self._create_target_se3(place_pos, direction, roll)
+            q_sol = self.solver.solve(q_seed[:7], target_se3)
+            
+            if q_sol is not None:
+                if plant_name is not None:
+                    self.planner.set_collision_mask(plant_name, ignore=True)
+                is_safe = self.planner.collision_free(q_sol)
+                if plant_name is not None:
+                    self.planner.set_collision_mask(plant_name, ignore=False)
+                if not is_safe:
+                    continue
+
+                clearance = self._calculate_clearance()
+                joint_penalty = self._calculate_joint_penalty(q_sol)
+                
+                gripper_x = target_se3.rotation[:, 0]
+
+                score_x = abs(np.dot(gripper_x, [1, 0, 0]))
+                score_y = abs(np.dot(gripper_x, [0, 1, 0]))
+
+                # prefers grasps that are aligned with body axis
+                alignment_bonus = max(score_x, score_y)
+
+                score = (clearance * 50.0) + (alignment_bonus * 20.0) - (joint_penalty * 1.0)
+                
+                candidates.append({'q': q_sol, 'pose': target_se3, 'score': score})
+
+        if not candidates:
+            return None, None
+
+        candidates.sort(key=lambda x: x['score'], reverse=True)
+        return candidates[0]['q'], candidates[0]['pose']
