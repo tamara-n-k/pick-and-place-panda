@@ -98,13 +98,11 @@ class GraspSampler:
                         
                         gripper_x = target_se3.rotation[:, 0]
 
+                        # prefers grasps that are aligned with tray
                         score_x = abs(np.dot(gripper_x, [1, 0, 0]))
-                        score_y = abs(np.dot(gripper_x, [0, 1, 0]))
 
-                        # prefers grasps that are aligned with body axis
-                        alignment_bonus = max(score_x, score_y)
 
-                        score = (clearance * 50.0) + (alignment_bonus * 5.0) - (joint_penalty * 2.0) - (tilt * 10.0)
+                        score = (clearance * 50.0) + (score_x * 20.0) - (joint_penalty * 2.0) - (tilt * 10.0)
                         
                         candidates.append({'q': q_sol, 'pose': target_se3, 'score': score})
 
