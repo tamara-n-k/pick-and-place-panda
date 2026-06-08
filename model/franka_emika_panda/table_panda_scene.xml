@@ -357,6 +357,54 @@
             conaffinity="1"
             friction="1.5 0.005 0.0001"
             group="3"/>
+      <!-- extensions -->
+      <replicate count="7" offset="0.093 0 0">
+      <geom name="tray_extension1"
+            type="box"
+            pos="0.02 0.085 -0.05"
+            size="0.02 0.035 0.03"
+            rgba="0.1 0.8 0.1 0.25"
+            contype="1"
+            conaffinity="1"
+            friction="1.5 0.005 0.0001"
+            group="3"/>
+      </replicate>
+
+    <replicate count="7" offset="0.093 0 0">
+      <geom name="tray_extension2"
+            type="box"
+            pos="0.02 0.085 -0.15"
+            size="0.02 0.035 0.03"
+            rgba="0.1 0.8 0.1 0.25"
+            contype="1"
+            conaffinity="1"
+            friction="1.5 0.005 0.0001"
+            group="3"/>
+      </replicate>
+
+    <replicate count="7" offset="0.093 0 0">
+      <geom name="tray_extension3"
+            type="box"
+            pos="0.02 0.085 -0.25"
+            size="0.02 0.035 0.03"
+            rgba="0.1 0.8 0.1 0.25"
+            contype="1"
+            conaffinity="1"
+            friction="1.5 0.005 0.0001"
+            group="3"/>
+      </replicate>
+
+    <replicate count="7" offset="0.093 0 0">
+      <geom name="tray_extension4"
+            type="box"
+            pos="0.02 0.085 -0.35"
+            size="0.02 0.035 0.03"
+            rgba="0.1 0.8 0.1 0.25"
+            contype="1"
+            conaffinity="1"
+            friction="1.5 0.005 0.0001"
+            group="3"/>
+      </replicate>
 
     </body>
 
@@ -379,10 +427,10 @@
     </body>
 
   <!-- plants -->
-  <body name="plant_1" pos="0.15 0.31 1.0" >
+  <body name="plant_1" pos="-0.13 0.15 0.9" >
       <joint type="free" name="plant_1_free"/>
       <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
-      <geom name="plant_1_cube" type="box" size="0.025 0.025 0.03" rgba="0.6 0.3 0.1 1" 
+      <geom name="plant_1_cube" type="box" size="0.02 0.02 0.04" rgba="0.6 0.3 0.1 1" 
             mass="0.1"
             condim="3" 
             friction="1.5 0.005 0.0001"
@@ -391,10 +439,10 @@
             contype="1" conaffinity="1"/>
   </body>
 
-  <body name="plant_2" pos="-0.15 0.2 1.0" >
+  <body name="plant_2" pos="-0.14 0.35 1.0" >
       <joint type="free" name="plant_2_free"/>
       <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
-      <geom name="plant_2_cube" type="box" size="0.025 0.025 0.03" rgba="0.6 0.3 0.1 1" 
+      <geom name="plant_2_cube" type="box" size="0.02 0.02 0.04" rgba="0.6 0.3 0.1 1" 
             mass="0.1"
             condim="3" 
             friction="1.5 0.005 0.0001" 
