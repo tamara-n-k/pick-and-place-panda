@@ -30,11 +30,12 @@ if __name__ == "__main__":
         time.sleep(env.robot.model.opt.timestep)
 
     task = PickAndPlace(env, MotionPlanner(env), IKSolver(env.pin))
-    plants = ["plant_1", "plant_2"]
+    plants = ["plant_1", "plant_2", "plant_3"]
     # hole offsets of the place down tray
     hole_offsets = [
         np.array([0.28, 0.10, -0.18]),
-        np.array([0.45, 0.10, -0.18])
+        np.array([0.45, 0.10, -0.18]),
+                ([0.62, 0.10, -0.18])
                 ]
 
     for plant in plants:
