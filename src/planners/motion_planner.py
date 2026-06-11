@@ -18,8 +18,9 @@ class MotionPlanner:
     def __init__(self, environment):
         self.env = environment
         robot = self.env.robot
-        self.planner_data = mujoco.MjData(self.env.robot.model) # create a separate data instance for collision checking to avoid affecting the main simulation data and viewer
-
+        # Separate MuJoCo data used only for planning queries.
+        # This lets collision checks run FK/contact detection without moving the live simulation.
+        self.planner_data = mujoco.MjData(self.env.robot.model)
         self.bounds = ob.RealVectorBounds(robot.n_arm_dofs)#robot's limits
         self.space = ob.RealVectorStateSpace(robot.n_arm_dofs)#configuration space
         self.set_bounds(self.env.robot.arm_lower, self.env.robot.arm_upper)
@@ -64,6 +65,8 @@ class MotionPlanner:
             self.start[i] = start[i]
             self.goal[i] = goal[i]
 
+    # go through the MuJoCo body tree to see if the collision object is part of the robot
+    # all robot links are descendants of link0
     def _body_is_robot(self, body_id):
         m = self.env.robot.model
         robot_root_id = m.body("link0").id
@@ -72,9 +75,9 @@ class MotionPlanner:
             if body_id == robot_root_id:
                 return True
             body_id = m.body_parentid[body_id]
-
         return False
-
+    
+    # the robot is not allowed to collide with those objects during motion planning
     def _body_is_forbidden_object(self, body_id):
         m = self.env.robot.model
         body_name = m.body(body_id).name or ""
@@ -82,6 +85,9 @@ class MotionPlanner:
 
         return any(obj in body_name for obj in forbidden_objects)
 
+
+    # the contact is invalid only when it is robot and obstacle collision
+    # contacts between non-robot objects are ignored by the motion planner
     def _contact_is_forbidden(self, con):
         m = self.env.robot.model
         geom1 = m.geom(con.geom1)
@@ -168,7 +174,7 @@ class MotionPlanner:
 
     def find_path_rrt(self, start = None, goal = None, plant_name=None):
         #ompl planning
-        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
+        self.set_collision_mask(plant_name, ignore=True) # Ignore plant contacts while planning with the object attached
         if start is not None and goal is not None:
             self.define_start_goal_positions(start, goal)
         elif self.start is None or self.goal is None:
@@ -205,7 +211,7 @@ class MotionPlanner:
         
     def find_linear_path(self, q_start, q_goal, plant_name):
         path_list = []
-        self.set_collision_mask(plant_name, ignore=True) # ensure plant is considered in collision checking
+        self.set_collision_mask(plant_name, ignore=True) # Ignore plant contacts while planning with the object attached
         if q_start is not None and q_goal is not None:
             self.define_start_goal_positions(q_start, q_goal)
         elif self.start is None or self.goal is None:
