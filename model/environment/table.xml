@@ -1,0 +1,47 @@
+<mujocoinclude>
+<body name="vention table" childclass="vention" pos="0 0 0" quat="0.7071 0 0 -0.7071">
+        <!-- leg floor pads -->
+        <geom type="cylinder" size="0.040 0.010" pos="-.585 -.383 0.010" material="vention_black"/>
+        <geom type="cylinder" size="0.040 0.010" pos="0.585 -.383 0.010" material="vention_black"/>
+        <geom type="cylinder" size="0.040 0.010" pos="-.585 0.383 0.010" material="vention_black"/>
+        <geom type="cylinder" size="0.040 0.010" pos="0.585 0.383 0.010" material="vention_black"/>
+
+        <!-- leg pad stems -->
+        <geom type="cylinder" size="0.010 0.020" pos="-.585 -.383 0.030" rgba=".5 .5 .5 1"/>
+        <geom type="cylinder" size="0.010 0.020" pos="0.585 -.383 0.030" rgba=".5 .5 .5 1"/>
+        <geom type="cylinder" size="0.010 0.020" pos="-.585 0.383 0.030" rgba=".5 .5 .5 1"/>
+        <geom type="cylinder" size="0.010 0.020" pos="0.585 0.383 0.030" rgba=".5 .5 .5 1"/>
+
+        <!-- legs -->
+        <geom type="box" size="0.023 0.023 .387" pos="-.585 -.383 0.435" material="vention_blue"/>
+        <geom type="box" size="0.023 0.023 .387" pos="0.585 -.383 0.435" material="vention_blue"/>
+        <geom type="box" size="0.023 0.023 .387" pos="-.585 0.383 0.435" material="vention_blue"/>
+        <geom type="box" size="0.023 0.023 .387" pos="0.585 0.383 0.435" material="vention_blue"/>
+
+        <!-- middle legs -->
+        <geom type="box" size="0.023 0.023 .337" pos="0 0.377 0.440" material="vention_blue"/>
+        <geom type="box" size="0.023 0.023 .337" pos="0 -.377 0.440" material="vention_blue"/>
+
+        <!-- top board -->
+        <body name="tabletop" childclass="vention" pos="0 0 0.801">
+          <body name="panda_mount" pos="0 -0.43 0.023" quat="0.7071 0 0 0.7071">
+            <light name="panda_top" pos="0 0 2" mode="trackcom"/>
+            <include file="franka_emika_panda/panda_body.xml"/>
+          </body>
+        </body>
+        <geom type="box" size="0.612 0.409 0.023"  pos="0 0 0.801" material="vention_black" />
+        <geom type="box" size="0.55 0.35 0.001" pos="0.0 0.025 0.825" material="vention_white"/>
+        <geom type="box" size="0.2 0.1 0.023"  pos="0 -0.513 0.801" material="vention_black"/>
+        <geom type="box" size="0.202 0.102 0.023" pos="0 -0.513 0.790" material="vention_blue"/>
+        <geom type="box" size="0.023 0.15 0.023" pos="0 -0.48 0.676" quat="0.9239 -0.3827 0 0" material="vention_blue"/>
+        <geom type="box" size="0.614 0.411 0.023" pos="0 0 0.790" material="vention_blue"/>
+
+        <!-- bottom board -->
+        <geom type="box" size="0.602 0.399 0.005" pos="0 0 0.150" material="vention_black"/>
+        <geom type="box" size="0.604 0.401 0.023" pos="0 0 0.124" material="vention_blue"/>
+
+        <!-- collision -->
+        <geom type="box" size="0.604 0.401 0.001" pos="0 0 0.825" class="vention_collision"/>
+
+    </body>
+    </mujocoinclude>

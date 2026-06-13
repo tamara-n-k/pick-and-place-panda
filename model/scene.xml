@@ -1,0 +1,46 @@
+<mujoco model="pick and place scene">
+<!-- the path for the meshes is the current directory, so in all subfiles we go from this directory (because includes are just copy pasted here)-->
+  <compiler
+    angle="radian"
+    meshdir="./" 
+    autolimits="true"/>
+
+  <!-- this defines how fast the robot will be moving -->
+  <option integrator="implicitfast" timestep="0.002"/>
+
+  <!-- reusable default classes for environment and panda objects. -->
+  <include file="environment/defaults_environment.xml"/>
+  <include file="franka_emika_panda/defaults_panda.xml"/>
+
+  <!-- meshes, textures, and materials used by the scene. -->
+  <asset>
+    <include file="environment/assets_environment.xml"/>
+    <include file="franka_emika_panda/assets_panda.xml"/>
+  </asset>
+
+  <!-- Viewer/camera framing hint used by MuJoCo, is overwritten in Viewer -->
+  <statistic center="0.3 0 0.4" extent="1"/>
+
+  <!-- Visual rendering settings -->
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <!-- Physical scene contents: lights, floor, table, trays, plants, and robot mount. -->
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+
+    <!-- table is built with primitive shapes only, no CAD files included -->
+    <!-- table.xml includes the panda mount -->
+    <include file="environment/table.xml"/> 
+    <include file="environment/trays.xml"/>
+    <!-- plants are just boxes for now -->
+    <include file="environment/plants.xml"/>
+  </worldbody>
+
+  <!-- this  defines how the panda is being controlled when moved-->
+  <include file="franka_emika_panda/panda_controls.xml"/>
+</mujoco>
